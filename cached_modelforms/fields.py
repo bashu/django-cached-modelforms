@@ -6,6 +6,16 @@ from django.core.exceptions import ValidationError
 
 
 class ModelChoiceField(ChoiceField):
+    '''
+    ModelChoiceField that accepts ``choices`` argument.
+
+    ``choices`` can be:
+      * a list (or any iterable) or objects, e.g. ``[obj1, obj2, ...]``
+      * a list (or any iterable) of tuples: ``[(obj1.pk, obj1), (obj2.pk, obj2), ...]``
+      * a dict: ``{obj1.pk: obj1, obj2.pk: obj2, ...}``
+
+    It doesn't accept ``to_field_name`` argument.
+    '''
     def __init__(self, choices=(), empty_label=u"---------", required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
@@ -36,6 +46,16 @@ class ModelChoiceField(ChoiceField):
         return Field.validate(self, value)
 
 class ModelMultipleChoiceField(ModelChoiceField):
+    '''
+    ModelMultipleChoiceField that accepts ``choices`` argument.
+
+    ``choices`` can be:
+      * a list (or any iterable) or objects, e.g. ``[obj1, obj2, ...]``
+      * a list (or any iterable) of tuples: ``[(obj1.pk, obj1), (obj2.pk, obj2), ...]``
+      * a dict: ``{obj1.pk: obj1, obj2.pk: obj2, ...}``
+
+    It doesn't accept ``to_field_name`` argument.
+    '''
     hidden_widget = MultipleChoiceField.hidden_widget
     widget = MultipleChoiceField.widget
     default_error_messages = MultipleChoiceField.default_error_messages
