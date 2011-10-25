@@ -23,11 +23,21 @@ class ModelChoiceField(ChoiceField):
             self.empty_label = None
         else:
             self.empty_label = empty_label
-        choices = [(smart_unicode(x.pk), smart_unicode(x)) for x in objects]
-        self.objects = dict((smart_unicode(x.pk), x) for x in objects)
+        if isinstance(choices, dict):
+            self.objects = dict((smart_unicode(k), v) for k, v in choices.itervalues())
+        else:
+            choices = list(choices)
+            if choices:
+                if isinstance(choices[0], (list, tuple)):
+                    self.objects = dict((smart_unicode(k), v) for k, v in choices)
+                else:
+                    self.objects = dict((smart_unicode(x.pk), x) for x in choices)
+            else:
+                self.objects = {}
+        _choices = [(k, smart_unicode(v)) for k ,v in self.objects.itervalues()]
         if self.empty_label is not None:
-            choices.insert(0, (u'', self.empty_label))
-        super(ModelChoiceField, self).__init__(choices=choices,
+            _choices.insert(0, (u'', self.empty_label))
+        super(ModelChoiceField, self).__init__(choices=_choices,
                                                required=required,
                                                widget=widget, label=label,
                                                initial=initial,
@@ -63,7 +73,7 @@ class ModelMultipleChoiceField(ModelChoiceField):
     def __init__(self, choices=(), required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
-        super(ModelMultipleChoiceField, self).__init__(objects, None, required,
+        super(ModelMultipleChoiceField, self).__init__(choices, None, required,
                                                        widget, label, initial,
                                                        help_text, *args,
                                                        **kwargs)
