@@ -1,4 +1,9 @@
 # -*- coding:utf-8 -*-
+'''
+The realisation of ModelForm that uses ModelChoiceField and
+ModelMultipleChoiceField from fields.py
+'''
+
 from django.db.models import ForeignKey, ManyToManyField
 from django.forms.models import BaseModelForm, ModelFormOptions, fields_for_model
 from django.forms.widgets import media_property
@@ -9,9 +14,17 @@ from fields import ModelChoiceField, ModelMultipleChoiceField
 
 
 def make_formfield_callback(another_func, choices):
+    '''
+    Decorator that creates ``formfield_callback`` function (that makes
+    ModelForm to use desired form field for certain model fields).
+    
+    If there is another ``formfield_callback`` defined, decorator
+    will apply it too (for any field exept for ``ForeignKey`` and
+    ``ManyToManyField``).
+    '''
     def formfield_callback(f, **kwargs):
         if f.name in choices:
-            kwargs['objects'] = choices[f.name]
+            kwargs['choices'] = choices[f.name]
             if isinstance(f, ForeignKey):
                 return ModelChoiceField(**kwargs)
             elif isinstance(f, ManyToManyField):
@@ -23,11 +36,22 @@ def make_formfield_callback(another_func, choices):
     return formfield_callback
 
 class CachedModelFormOptions(ModelFormOptions):
+    '''
+    ``ModelFormOptions`` version that also extracts ``choices`` param.
+    '''
     def __init__(self, options=None):
         super(CachedModelFormOptions, self).__init__(options)
         self.choices = getattr(options, 'choices', None)
 
 class CachedModelFormMetaclass(type):
+    '''
+    ModelFormMetaclass version that applies ``make_formfield_callback``
+    decorator and passess ``opts.choices`` to it if neccessary.
+    
+    I had to do a lot of copy-pasting from ``ModelFormMetaclass``
+    source, it's impossible (at least for me) to alter it desired way
+    using ``super``.
+    '''
     def __new__(cls, name, bases, attrs):
         formfield_callback = attrs.pop('formfield_callback', None)
         try:
@@ -69,4 +93,14 @@ class CachedModelFormMetaclass(type):
         return new_class
 
 class ModelForm(BaseModelForm):
+    '''
+    ``ModelForm`` that uses ``ModelChoiceField`` and
+    ``ModelMultipleChoiceField`` from fields.py.
+    
+    Choices are passed in ``Meta`` like this::
+        
+        class Meta:
+            choices = {'field_name_1': choices1,
+                       'field_name_2': choices2, ...}
+    '''
     __metaclass__ = CachedModelFormMetaclass
