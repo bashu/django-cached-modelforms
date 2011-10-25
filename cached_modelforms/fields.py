@@ -1,4 +1,8 @@
 # -*- coding:utf-8 -*-
+'''
+Fields.
+'''
+
 from django.forms import Field, ChoiceField, MultipleChoiceField
 from django.utils.encoding import smart_unicode
 from django.core.validators import EMPTY_VALUES
