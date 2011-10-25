@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 
 class ModelChoiceField(ChoiceField):
-    def __init__(self, objects=(), empty_label=u"---------", required=True,
+    def __init__(self, choices=(), empty_label=u"---------", required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
         if required and (initial is not None):
@@ -40,7 +40,7 @@ class ModelMultipleChoiceField(ModelChoiceField):
     widget = MultipleChoiceField.widget
     default_error_messages = MultipleChoiceField.default_error_messages
 
-    def __init__(self, objects=(), required=True,
+    def __init__(self, choices=(), required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
         super(ModelMultipleChoiceField, self).__init__(objects, None, required,
