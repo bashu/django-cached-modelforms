@@ -1,69 +1,61 @@
 # -*- coding:utf-8 -*-
-'''
-Tests for ``ModelForm``.
-
-Note that Django auth framework is required here, because its ``User``,
-``Group``, ``Message`` and ``Permission`` models are used for testing.
-'''
-
-from django.test import TestCase
-from django.contrib.auth.models import User, Message, Group, Permission
 from django.forms.models import ModelChoiceField as OrigModelChoiceField
 from django.forms.models import ModelMultipleChoiceField as OrigModelMultipleChoiceField
 from django.forms import Textarea
-from django.db.models import TextField, CharField
+from django.db.models import CharField
 
 from cached_modelforms import ModelForm, ModelChoiceField, ModelMultipleChoiceField
+from cached_modelforms.tests.utils import SettingsTestCase
+from cached_modelforms.tests.models import SimpleModel, ModelWithForeignKey, ModelWithM2m
 
 
 def formfield_callback(f, **kwargs):
     result = f.formfield(**kwargs)
-    if isinstance(f, (TextField, CharField)):
+    if isinstance(f, CharField):
         result.widget = Textarea(attrs={'cols': '999', 'rows': '888'})
     return result
 
-class TestForms(TestCase):
+class TestForms(SettingsTestCase):
     def setUp(self):
-        self.user1 = User.objects.create_user(u'danny', u'danny@danny.com', u'123456')
-        self.user2 = User.objects.create_user(u'penny', u'penny@penny.com', u'123456')
-        self.user3 = User.objects.create_user(u'lenny', u'lenny@lenny.com', u'123456')
+        self.settings_manager.set(INSTALLED_APPS=('cached_modelforms.tests',))
 
-        self.cached_user_list = [self.user1, self.user2, self.user3]
+        self.obj1 = SimpleModel.objects.create(name=u'name1')
+        self.obj2 = SimpleModel.objects.create(name=u'name2')
+        self.obj3 = SimpleModel.objects.create(name=u'name3')
 
-        # Get any three permissions
-        self.cached_perm_list = list(Permission.objects.all()[:3])
+        self.cached_list = [self.obj1, self.obj2, self.obj3]
 
         class ModelFormSingle(ModelForm):
             class Meta:
-                model = Message
-                choices = {'user': self.cached_user_list}
+                model = ModelWithForeignKey
+                choices = {'fk_field': self.cached_list}
 
         class ModelFormSingleWithoutChoices(ModelForm):
             class Meta:
-                model = Message
+                model = ModelWithForeignKey
 
         class ModelFormSingleWithFormfieldCallback(ModelForm):
             formfield_callback = formfield_callback
 
             class Meta:
-                model = Message
-                choices = {'user': self.cached_user_list}
+                model = ModelWithForeignKey
+                choices = {'fk_field': self.cached_list}
 
         class ModelFormMultiple(ModelForm):
             class Meta:
-                model = Group
-                choices = {'permissions': self.cached_perm_list}
+                model = ModelWithM2m
+                choices = {'m2m_field': self.cached_list}
 
         class ModelFormMultipleWithoutChoices(ModelForm):
             class Meta:
-                model = Group
+                model = ModelWithM2m
 
         class ModelFormMultipleWithFormfieldCallback(ModelForm):
             formfield_callback = formfield_callback
 
             class Meta:
-                model = Group
-                choices = {'permissions': self.cached_perm_list}
+                model = ModelWithM2m
+                choices = {'m2m_field': self.cached_list}
 
         self.ModelFormSingle = ModelFormSingle
         self.ModelFormSingleWithoutChoices = ModelFormSingleWithoutChoices
@@ -73,43 +65,42 @@ class TestForms(TestCase):
         self.ModelFormMultipleWithFormfieldCallback = ModelFormMultipleWithFormfieldCallback
 
     def test_modelform_single(self):
-        form = self.ModelFormSingle({'user': unicode(self.user1.pk),
-                                          'message': u'Hi, Danny!'})
-        self.assertTrue(isinstance(form.fields['user'], ModelChoiceField))
+        form = self.ModelFormSingle({'fk_field': unicode(self.obj1.pk),
+                                     'name': u'Name1'})
+        self.assertTrue(isinstance(form.fields['fk_field'], ModelChoiceField))
 
-        message = form.save()
-        self.assertEqual(message.user, self.user1)
+        new_obj = form.save()
+        self.assertEqual(new_obj.fk_field, self.obj1)
 
     def test_modelform_single_without_choices(self):
-        form = self.ModelFormSingleWithoutChoices({'user': unicode(self.user1.pk),
-                                                        'message': u'Hi, Danny!'})
-        self.assertTrue(isinstance(form.fields['user'], OrigModelChoiceField))
+        form = self.ModelFormSingleWithoutChoices({'fk_field': unicode(self.obj1.pk),
+                                                   'name': u'Name1'})
+        self.assertTrue(isinstance(form.fields['fk_field'], OrigModelChoiceField))
 
     def test_modelform_single_with_formfield_callback(self):
-        form = self.ModelFormSingleWithFormfieldCallback({'user': unicode(self.user1.pk),
-                                                               'message': u'Hi, Danny!'})
-        self.assertTrue(isinstance(form.fields['user'], ModelChoiceField))
-        self.assertEqual(form.fields['message'].widget.attrs['cols'], '999')
+        form = self.ModelFormSingleWithFormfieldCallback({'fk_field': unicode(self.obj1.pk),
+                                                          'name': u'Name1'})
+        self.assertTrue(isinstance(form.fields['fk_field'], ModelChoiceField))
+        self.assertEqual(form.fields['name'].widget.attrs['cols'], '999')
 
     def test_modelform_multiple(self):
-        form = self.ModelFormMultiple({'permissions': [unicode(self.cached_perm_list[0].pk),
-                                                       unicode(self.cached_perm_list[1].pk)],
-                                       'name': u'Somename'})
-        self.assertTrue(isinstance(form.fields['permissions'], ModelMultipleChoiceField))
+        form = self.ModelFormMultiple({'m2m_field': [unicode(self.obj1.pk),
+                                                     unicode(self.obj2.pk)],
+                                       'name': u'Name1'})
+        self.assertTrue(isinstance(form.fields['m2m_field'], ModelMultipleChoiceField))
 
-        group = form.save()
-        self.assertEqual(set(group.permissions.all()), set([self.cached_perm_list[0],
-                                                           self.cached_perm_list[1]]))
+        new_obj = form.save()
+        self.assertEqual(set(new_obj.m2m_field.all()), set([self.obj1, self.obj2]))
 
     def test_modelform_multiple_without_choices(self):
-        form = self.ModelFormMultipleWithoutChoices({'permissions': [unicode(self.cached_perm_list[0].pk),
-                                                                     unicode(self.cached_perm_list[1].pk)],
-                                                     'name': u'Somename'})
-        self.assertTrue(isinstance(form.fields['permissions'], OrigModelMultipleChoiceField))
+        form = self.ModelFormMultipleWithoutChoices({'m2m_field': [unicode(self.obj1.pk),
+                                                                   unicode(self.obj2.pk)],
+                                                     'name': u'Name1'})
+        self.assertTrue(isinstance(form.fields['m2m_field'], OrigModelMultipleChoiceField))
 
     def test_modelform_multiple_with_formfield_callback(self):
-        form = self.ModelFormMultipleWithFormfieldCallback({'permissions': [unicode(self.cached_perm_list[0].pk),
-                                                                            unicode(self.cached_perm_list[1].pk)],
-                                                            'name': u'Somename'})
-        self.assertTrue(isinstance(form.fields['permissions'], ModelMultipleChoiceField))
+        form = self.ModelFormMultipleWithFormfieldCallback({'m2m_field': [unicode(self.obj1.pk),
+                                                                          unicode(self.obj2.pk)],
+                                                            'name': u'Name1'})
+        self.assertTrue(isinstance(form.fields['m2m_field'], ModelMultipleChoiceField))
         self.assertEqual(form.fields['name'].widget.attrs['cols'], '999')

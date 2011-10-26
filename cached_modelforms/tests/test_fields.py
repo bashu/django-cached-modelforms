@@ -1,31 +1,26 @@
 # -*- coding:utf-8 -*-
-'''
-Tests for ``ModelChoiceField`` and ``ModelMultipleChoiceField``.
-
-Note that Django auth framework is required here, because its ``User`` model
-is used for testing.
-'''
-
-from django.test import TestCase
 from django import forms
-from django.contrib.auth.models import User
 from django.utils.encoding import smart_unicode
 
+from cached_modelforms.tests.utils import SettingsTestCase
+from cached_modelforms.tests.models import SimpleModel
 from cached_modelforms import ModelChoiceField, ModelMultipleChoiceField
 
-class TestFields(TestCase):
+class TestFields(SettingsTestCase):
     def setUp(self):
-        self.user1 = User.objects.create_user(u'danny', u'danny@danny.com', u'123456')
-        self.user2 = User.objects.create_user(u'penny', u'penny@penny.com', u'123456')
-        self.user3 = User.objects.create_user(u'lenny', u'lenny@lenny.com', u'123456')
+        self.settings_manager.set(INSTALLED_APPS=('cached_modelforms.tests',))
 
-        self.cached_list = [self.user1, self.user2, self.user3]
+        self.obj1 = SimpleModel.objects.create(name=u'name1')
+        self.obj2 = SimpleModel.objects.create(name=u'name2')
+        self.obj3 = SimpleModel.objects.create(name=u'name3')
+
+        self.cached_list = [self.obj1, self.obj2, self.obj3]
 
         class FormSingle(forms.Form):
-            user = ModelChoiceField(choices=self.cached_list, required=False)
+            obj = ModelChoiceField(choices=self.cached_list, required=False)
 
         class FormMultiple(forms.Form):
-            user = ModelMultipleChoiceField(choices=self.cached_list, required=False)
+            obj = ModelMultipleChoiceField(choices=self.cached_list, required=False)
 
         self.FormSingle = FormSingle
         self.FormMultiple = FormMultiple
@@ -85,40 +80,40 @@ class TestFields(TestCase):
         Test, how the field handles data in form.
         '''
         # some value
-        form = self.FormSingle({'user': unicode(self.user1.pk)})
+        form = self.FormSingle({'obj': unicode(self.obj1.pk)})
         self.assertTrue(form.is_valid())
-        self.assertEqual(form.cleaned_data['user'], self.user1)
+        self.assertEqual(form.cleaned_data['obj'], self.obj1)
 
         # no value
         form = self.FormSingle({})
         self.assertTrue(form.is_valid())
-        self.assertEqual(form.cleaned_data['user'], None)
+        self.assertEqual(form.cleaned_data['obj'], None)
 
         # invalid value
-        form = self.FormSingle({'user': u'-1'})
+        form = self.FormSingle({'obj': u'-1'})
         self.assertFalse(form.is_valid())
-        self.assertTrue(form._errors['user'])
+        self.assertTrue(form._errors['obj'])
 
     def test_modelmultiplechoicefield_behavior(self):
         '''
         Test, how the field handles data in form.
         '''
         # some value
-        form = self.FormMultiple({'user': [unicode(self.user1.pk), unicode(self.user2.pk)]})
+        form = self.FormMultiple({'obj': [unicode(self.obj1.pk), unicode(self.obj2.pk)]})
         self.assertTrue(form.is_valid())
-        self.assertEqual(set(form.cleaned_data['user']), set([self.user1, self.user2]))
+        self.assertEqual(set(form.cleaned_data['obj']), set([self.obj1, self.obj2]))
 
         # no value
         form = self.FormMultiple({})
         self.assertTrue(form.is_valid())
-        self.assertEqual(form.cleaned_data['user'], [])
+        self.assertEqual(form.cleaned_data['obj'], [])
 
         # invalid value
-        form = self.FormMultiple({'user': [unicode(self.user1.pk), u'-1']})
+        form = self.FormMultiple({'obj': [unicode(self.obj1.pk), u'-1']})
         self.assertFalse(form.is_valid())
-        self.assertTrue(form._errors['user'])
+        self.assertTrue(form._errors['obj'])
 
         # invalid list
-        form = self.FormMultiple({'user': u'-1'})
+        form = self.FormMultiple({'obj': u'-1'})
         self.assertFalse(form.is_valid())
-        self.assertTrue(form._errors['user'])
+        self.assertTrue(form._errors['obj'])
