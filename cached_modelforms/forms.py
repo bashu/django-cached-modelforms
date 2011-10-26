@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 '''
-The realisation of ModelForm that uses ModelChoiceField and
-ModelMultipleChoiceField from fields.py
+The realisation of ``ModelForm`` that uses ``ModelChoiceField`` and
+``ModelMultipleChoiceField`` from fields.py
 '''
 
 from django.db.models import ForeignKey, ManyToManyField
@@ -16,8 +16,8 @@ from fields import ModelChoiceField, ModelMultipleChoiceField
 def make_formfield_callback(another_func, choices):
     '''
     Decorator that creates ``formfield_callback`` function (that makes
-    ModelForm to use desired form field for certain model fields).
-    
+    ``ModelForm`` to use desired form field for certain model fields).
+
     If there is another ``formfield_callback`` defined, decorator
     will apply it too (for any field exept for ``ForeignKey`` and
     ``ManyToManyField``).
@@ -45,9 +45,9 @@ class CachedModelFormOptions(ModelFormOptions):
 
 class CachedModelFormMetaclass(type):
     '''
-    ModelFormMetaclass version that applies ``make_formfield_callback``
+    ``ModelFormMetaclass`` version that applies ``make_formfield_callback``
     decorator and passess ``opts.choices`` to it if neccessary.
-    
+
     I had to do a lot of copy-pasting from ``ModelFormMetaclass``
     source, it's impossible (at least for me) to alter it desired way
     using ``super``.
@@ -96,9 +96,9 @@ class ModelForm(BaseModelForm):
     '''
     ``ModelForm`` that uses ``ModelChoiceField`` and
     ``ModelMultipleChoiceField`` from fields.py.
-    
+
     Choices are passed in ``Meta`` like this::
-        
+
         class Meta:
             choices = {'field_name_1': choices1,
                        'field_name_2': choices2, ...}

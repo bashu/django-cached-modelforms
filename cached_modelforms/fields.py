@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 
 class ModelChoiceField(ChoiceField):
     '''
-    ModelChoiceField that accepts ``choices`` argument.
+    ``ModelChoiceField`` that accepts ``choices`` argument.
 
     ``choices`` can be:
       * a list (or any iterable) or objects, e.g. ``[obj1, obj2, ...]``
@@ -28,17 +28,20 @@ class ModelChoiceField(ChoiceField):
         else:
             self.empty_label = empty_label
         if isinstance(choices, dict):
-            self.objects = dict((smart_unicode(k), v) for k, v in choices.itervalues())
+            self.objects = dict((smart_unicode(k), v) for k, v in choices.iteritems())
+            _choices = [(x, smart_unicode(self.objects[x])) for x in sorted(self.objects.keys())]
         else:
             choices = list(choices)
             if choices:
                 if isinstance(choices[0], (list, tuple)):
                     self.objects = dict((smart_unicode(k), v) for k, v in choices)
+                    _choices = [(smart_unicode(k), smart_unicode(v)) for k, v in choices]
                 else:
                     self.objects = dict((smart_unicode(x.pk), x) for x in choices)
+                    _choices = [(smart_unicode(x.pk), smart_unicode(x)) for x in choices]
             else:
                 self.objects = {}
-        _choices = [(k, smart_unicode(v)) for k ,v in self.objects.itervalues()]
+                _choices = ()
         if self.empty_label is not None:
             _choices.insert(0, (u'', self.empty_label))
         super(ModelChoiceField, self).__init__(choices=_choices,
@@ -61,7 +64,7 @@ class ModelChoiceField(ChoiceField):
 
 class ModelMultipleChoiceField(ModelChoiceField):
     '''
-    ModelMultipleChoiceField that accepts ``choices`` argument.
+    ``ModelMultipleChoiceField`` that accepts ``choices`` argument.
 
     ``choices`` can be:
       * a list (or any iterable) or objects, e.g. ``[obj1, obj2, ...]``
@@ -87,4 +90,8 @@ class ModelMultipleChoiceField(ModelChoiceField):
             return []
         elif not isinstance(value, (list, tuple)):
             raise ValidationError(self.error_messages['invalid_list'])
-        return [self.objects[x] for x in value]
+        try:
+            result = [self.objects[x] for x in value]
+        except KeyError:
+            raise ValidationError(self.error_messages['invalid_choice'] % {'value': value})
+        return result
