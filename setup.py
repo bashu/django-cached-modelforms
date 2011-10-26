@@ -14,9 +14,8 @@ setup(
     long_description = read('README.rst'),
     author = "Vlad Starostin",
     author_email = "drtyrsa@yandex.ru",
-    packages = find_packages('cached_modelforms'),
-    package_dir = {'': 'cached_modelforms'},
-    install_requires= ['setuptools'],
+    packages = find_packages(),
+    include_package_data=True,
     classifiers = [
         'Development Status :: 1 - Beta',
         'Framework :: Django',
