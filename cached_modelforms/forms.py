@@ -30,7 +30,7 @@ def make_formfield_callback(another_func, choices):
             elif isinstance(f, ManyToManyField):
                 return ModelMultipleChoiceField(**kwargs)
         if another_func is not None:
-            return another_func(f)(**kwargs)
+            return another_func(f, **kwargs)
         else:
             return f.formfield(**kwargs)
     return formfield_callback
