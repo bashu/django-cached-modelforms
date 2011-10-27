@@ -25,9 +25,9 @@ class TestFields(SettingsTestCase):
         self.FormSingle = FormSingle
         self.FormMultiple = FormMultiple
 
-    def test_modelchoicefield_choices_arg(self):
+    def test_modelchoicefield_objects_arg(self):
         '''
-        Test, how the field accepts different types of ``choices`` argument.
+        Test, how the field accepts different types of ``objects`` argument.
         '''
         as_list = ModelChoiceField(objects=self.cached_list)
         as_iterable = ModelChoiceField(objects=iter(self.cached_list))
@@ -52,9 +52,9 @@ class TestFields(SettingsTestCase):
         # ``choices`` should be a list as ``[(smart_unicode(pk1), smart_unicode(obj1)), ...]``
         self.assertEqual(choices_without_empty_label, [(smart_unicode(x.pk), smart_unicode(x)) for x in self.cached_list])
 
-    def test_modelmultiplechoicefield_choices_arg(self):
+    def test_modelmultiplechoicefield_objects_arg(self):
         '''
-        Test, how the field accepts different types of ``choices`` argument.
+        Test, how the field accepts different types of ``objects`` argument.
         '''
         as_list = ModelMultipleChoiceField(objects=self.cached_list)
         as_iterable = ModelMultipleChoiceField(objects=iter(self.cached_list))
@@ -117,3 +117,19 @@ class TestFields(SettingsTestCase):
         form = self.FormMultiple({'obj': u'-1'})
         self.assertFalse(form.is_valid())
         self.assertTrue(form._errors['obj'])
+
+    def test_modelchoicefield_objects_assignment(self):
+        field = ModelChoiceField(objects=self.cached_list)
+        field2 = ModelChoiceField(objects=self.cached_list[:2])
+        field.objects = self.cached_list[:2]
+
+        self.assertEqual(field.objects, field2.objects)
+        self.assertEqual(field.choices, field2.choices)
+
+    def test_modelmultiplechoicefield_objects_assignment(self):
+        field = ModelMultipleChoiceField(objects=self.cached_list)
+        field2 = ModelMultipleChoiceField(objects=self.cached_list[:2])
+        field.objects = self.cached_list[:2]
+
+        self.assertEqual(field.objects, field2.objects)
+        self.assertEqual(field.choices, field2.choices)

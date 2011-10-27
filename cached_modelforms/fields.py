@@ -28,8 +28,6 @@ class ModelChoiceField(ChoiceField):
         else:
             self.empty_label = empty_label
         self.objects = objects
-        if self.empty_label is not None:
-            self.choices.insert(0, (u'', self.empty_label))
         super(ModelChoiceField, self).__init__(choices=self.choices,
                                                required=required,
                                                widget=widget, label=label,
@@ -58,6 +56,8 @@ class ModelChoiceField(ChoiceField):
             else:
                 self._objects = {}
                 self.choices = ()
+        if self.empty_label is not None:
+            self.choices.insert(0, (u'', self.empty_label))
 
     def to_python(self, value):
         if value in EMPTY_VALUES:
