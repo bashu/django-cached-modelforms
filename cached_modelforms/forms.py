@@ -7,7 +7,8 @@ The realisation of ``ModelForm`` that uses ``ModelChoiceField`` and
 from django.db.models import ForeignKey, ManyToManyField
 from django.forms.models import BaseModelForm, ModelFormOptions, fields_for_model
 from django.forms.widgets import media_property
-from django.forms.forms import get_declared_fields
+from django.forms.forms import BaseForm, get_declared_fields
+from django.forms.util import ErrorList
 from django.core.exceptions import FieldError
 
 from fields import ModelChoiceField, ModelMultipleChoiceField
@@ -42,6 +43,7 @@ class CachedModelFormOptions(ModelFormOptions):
     def __init__(self, options=None):
         super(CachedModelFormOptions, self).__init__(options)
         self.choices = getattr(options, 'choices', None)
+        self.m2m_initials = getattr(options, 'm2m_initials', None)
 
 class CachedModelFormMetaclass(type):
     '''
@@ -92,7 +94,71 @@ class CachedModelFormMetaclass(type):
         new_class.base_fields = fields
         return new_class
 
-class ModelForm(BaseModelForm):
+def model_to_dict(instance, fields=None, exclude=None, m2m_initials=None):
+    """
+    Returns a dict containing the data in ``instance`` suitable for passing as
+    a Form's ``initial`` keyword argument.
+
+    ``fields`` is an optional list of field names. If provided, only the named
+    fields will be included in the returned dict.
+
+    ``exclude`` is an optional list of field names. If provided, the named
+    fields will be excluded from the returned dict, even if they are listed in
+    the ``fields`` argument.
+    """
+    # avoid a circular import
+    from django.db.models.fields.related import ManyToManyField
+    if m2m_initials is None:
+        m2m_initials = {}
+    opts = instance._meta
+    data = {}
+    for f in opts.fields + opts.many_to_many:
+        if not f.editable:
+            continue
+        if fields and not f.name in fields:
+            continue
+        if exclude and f.name in exclude:
+            continue
+        if isinstance(f, ManyToManyField):
+            # If the object doesn't have a primry key yet, just use an empty
+            # list for its m2m fields. Calling f.value_from_object will raise
+            # an exception.
+            if instance.pk is None:
+                data[f.name] = []
+            elif f.name in m2m_initials:
+                data[f.name] = m2m_initials[f.name](instance)
+            else:
+                # MultipleChoiceWidget needs a list of pks, not object instances.
+                data[f.name] = [obj.pk for obj in f.value_from_object(instance)]
+        else:
+            data[f.name] = f.value_from_object(instance)
+    return data
+
+class CachedBaseModelForm(BaseModelForm):
+    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
+                 initial=None, error_class=ErrorList, label_suffix=':',
+                 empty_permitted=False, instance=None):
+        opts = self._meta
+        if instance is None:
+            if opts.model is None:
+                raise ValueError('ModelForm has no model class specified.')
+            # if we didn't get an instance, instantiate a new one
+            self.instance = opts.model()
+            object_data = {}
+        else:
+            self.instance = instance
+            object_data = model_to_dict(instance, opts.fields, opts.exclude, opts.m2m_initials)
+        # if initial was provided, it should override the values from instance
+        if initial is not None:
+            object_data.update(initial)
+        # self._validate_unique will be set to True by BaseModelForm.clean().
+        # It is False by default so overriding self.clean() and failing to call
+        # super will stop validate_unique from being called.
+        self._validate_unique = False
+        BaseForm.__init__(self, data, files, auto_id, prefix, object_data,
+                           error_class, label_suffix, empty_permitted)
+
+class ModelForm(CachedBaseModelForm):
     '''
     ``ModelForm`` that uses ``ModelChoiceField`` and
     ``ModelMultipleChoiceField`` from fields.py.
