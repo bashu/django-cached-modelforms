@@ -24,7 +24,7 @@ def make_formfield_callback(another_func, choices):
     '''
     def formfield_callback(f, **kwargs):
         if f.name in choices:
-            kwargs['choices'] = choices[f.name]
+            kwargs['objects'] = choices[f.name]
             if isinstance(f, ForeignKey):
                 return ModelChoiceField(**kwargs)
             elif isinstance(f, ManyToManyField):

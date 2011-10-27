@@ -11,45 +11,53 @@ from django.core.exceptions import ValidationError
 
 class ModelChoiceField(ChoiceField):
     '''
-    ``ModelChoiceField`` that accepts ``choices`` argument.
+    ``ModelChoiceField`` that accepts ``objects`` argument.
 
-    ``choices`` can be:
+    ``objects`` can be:
       * a list (or any iterable) or objects, e.g. ``[obj1, obj2, ...]``
       * a list (or any iterable) of tuples: ``[(obj1.pk, obj1), (obj2.pk, obj2), ...]``
       * a dict: ``{obj1.pk: obj1, obj2.pk: obj2, ...}``
 
     It doesn't accept ``to_field_name`` argument.
     '''
-    def __init__(self, choices=(), empty_label=u"---------", required=True,
+    def __init__(self, objects=(), empty_label=u"---------", required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
         if required and (initial is not None):
             self.empty_label = None
         else:
             self.empty_label = empty_label
-        if isinstance(choices, dict):
-            self.objects = dict((smart_unicode(k), v) for k, v in choices.iteritems())
-            _choices = [(x, smart_unicode(self.objects[x])) for x in sorted(self.objects.keys())]
-        else:
-            choices = list(choices)
-            if choices:
-                if isinstance(choices[0], (list, tuple)):
-                    self.objects = dict((smart_unicode(k), v) for k, v in choices)
-                    _choices = [(smart_unicode(k), smart_unicode(v)) for k, v in choices]
-                else:
-                    self.objects = dict((smart_unicode(x.pk), x) for x in choices)
-                    _choices = [(smart_unicode(x.pk), smart_unicode(x)) for x in choices]
-            else:
-                self.objects = {}
-                _choices = ()
+        self.objects = objects
         if self.empty_label is not None:
-            _choices.insert(0, (u'', self.empty_label))
-        super(ModelChoiceField, self).__init__(choices=_choices,
+            self.choices.insert(0, (u'', self.empty_label))
+        super(ModelChoiceField, self).__init__(choices=self.choices,
                                                required=required,
                                                widget=widget, label=label,
                                                initial=initial,
                                                help_text=help_text,
                                                *args, **kwargs)
+
+    @property
+    def objects(self):
+        return self._objects.copy()
+
+    @objects.setter
+    def objects(self, value):
+        if isinstance(value, dict):
+            self._objects = dict((smart_unicode(k), v) for k, v in value.iteritems())
+            self.choices = [(x, smart_unicode(self._objects[x])) for x in sorted(self._objects.keys())]
+        else:
+            objects = list(value)
+            if objects:
+                if isinstance(objects[0], (list, tuple)):
+                    self._objects = dict((smart_unicode(k), v) for k, v in objects)
+                    self.choices = [(smart_unicode(k), smart_unicode(v)) for k, v in objects]
+                else:
+                    self._objects = dict((smart_unicode(x.pk), x) for x in objects)
+                    self.choices = [(smart_unicode(x.pk), smart_unicode(x)) for x in objects]
+            else:
+                self._objects = {}
+                self.choices = ()
 
     def to_python(self, value):
         if value in EMPTY_VALUES:
@@ -64,9 +72,9 @@ class ModelChoiceField(ChoiceField):
 
 class ModelMultipleChoiceField(ModelChoiceField):
     '''
-    ``ModelMultipleChoiceField`` that accepts ``choices`` argument.
+    ``ModelMultipleChoiceField`` that accepts ``objects`` argument.
 
-    ``choices`` can be:
+    ``objects`` can be:
       * a list (or any iterable) or objects, e.g. ``[obj1, obj2, ...]``
       * a list (or any iterable) of tuples: ``[(obj1.pk, obj1), (obj2.pk, obj2), ...]``
       * a dict: ``{obj1.pk: obj1, obj2.pk: obj2, ...}``
@@ -77,10 +85,10 @@ class ModelMultipleChoiceField(ModelChoiceField):
     widget = MultipleChoiceField.widget
     default_error_messages = MultipleChoiceField.default_error_messages
 
-    def __init__(self, choices=(), required=True,
+    def __init__(self, objects=(), required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
-        super(ModelMultipleChoiceField, self).__init__(choices, None, required,
+        super(ModelMultipleChoiceField, self).__init__(objects, None, required,
                                                        widget, label, initial,
                                                        help_text, *args,
                                                        **kwargs)

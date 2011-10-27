@@ -17,10 +17,10 @@ class TestFields(SettingsTestCase):
         self.cached_list = [self.obj1, self.obj2, self.obj3]
 
         class FormSingle(forms.Form):
-            obj = ModelChoiceField(choices=self.cached_list, required=False)
+            obj = ModelChoiceField(objects=self.cached_list, required=False)
 
         class FormMultiple(forms.Form):
-            obj = ModelMultipleChoiceField(choices=self.cached_list, required=False)
+            obj = ModelMultipleChoiceField(objects=self.cached_list, required=False)
 
         self.FormSingle = FormSingle
         self.FormMultiple = FormMultiple
@@ -29,11 +29,11 @@ class TestFields(SettingsTestCase):
         '''
         Test, how the field accepts different types of ``choices`` argument.
         '''
-        as_list = ModelChoiceField(choices=self.cached_list)
-        as_iterable = ModelChoiceField(choices=iter(self.cached_list))
+        as_list = ModelChoiceField(objects=self.cached_list)
+        as_iterable = ModelChoiceField(objects=iter(self.cached_list))
         list_of_tuples = [(x.pk, x) for x in self.cached_list]
-        as_list_of_tuples = ModelChoiceField(choices=list_of_tuples)
-        as_dict = ModelChoiceField(choices=dict(list_of_tuples))
+        as_list_of_tuples = ModelChoiceField(objects=list_of_tuples)
+        as_dict = ModelChoiceField(objects=dict(list_of_tuples))
 
         choices_without_empty_label = as_list.choices[:]
         if as_list.empty_label is not None:
@@ -56,11 +56,11 @@ class TestFields(SettingsTestCase):
         '''
         Test, how the field accepts different types of ``choices`` argument.
         '''
-        as_list = ModelMultipleChoiceField(choices=self.cached_list)
-        as_iterable = ModelMultipleChoiceField(choices=iter(self.cached_list))
+        as_list = ModelMultipleChoiceField(objects=self.cached_list)
+        as_iterable = ModelMultipleChoiceField(objects=iter(self.cached_list))
         list_of_tuples = [(x.pk, x) for x in self.cached_list]
-        as_list_of_tuples = ModelMultipleChoiceField(choices=list_of_tuples)
-        as_dict = ModelMultipleChoiceField(choices=dict(list_of_tuples))
+        as_list_of_tuples = ModelMultipleChoiceField(objects=list_of_tuples)
+        as_dict = ModelMultipleChoiceField(objects=dict(list_of_tuples))
 
         # make sure all of the ``choices`` attrs are the same
         self.assertTrue(as_list.choices == as_iterable.choices == as_list_of_tuples.choices == as_dict.choices)
