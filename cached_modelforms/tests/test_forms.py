@@ -57,12 +57,19 @@ class TestForms(SettingsTestCase):
                 model = ModelWithM2m
                 choices = {'m2m_field': self.cached_list}
 
+        class ModelFormMultipleWithInitials(ModelForm):
+            class Meta:
+                model = ModelWithM2m
+                choices = {'m2m_field': self.cached_list}
+                m2m_initials = {'m2m_field': (lambda instance: [self.obj1.pk, self.obj2.pk])}
+
         self.ModelFormSingle = ModelFormSingle
         self.ModelFormSingleWithoutChoices = ModelFormSingleWithoutChoices
         self.ModelFormSingleWithFormfieldCallback = ModelFormSingleWithFormfieldCallback
         self.ModelFormMultiple = ModelFormMultiple
         self.ModelFormMultipleWithoutChoices = ModelFormMultipleWithoutChoices
         self.ModelFormMultipleWithFormfieldCallback = ModelFormMultipleWithFormfieldCallback
+        self.ModelFormMultipleWithInitials = ModelFormMultipleWithInitials
 
     def test_modelform_single(self):
         form = self.ModelFormSingle({'fk_field': unicode(self.obj1.pk),
@@ -71,6 +78,9 @@ class TestForms(SettingsTestCase):
 
         new_obj = form.save()
         self.assertEqual(new_obj.fk_field, self.obj1)
+
+        form = self.ModelFormSingle(instance=new_obj)
+        self.assertEqual(form.initial['fk_field'], self.obj1.pk)
 
     def test_modelform_single_without_choices(self):
         form = self.ModelFormSingleWithoutChoices({'fk_field': unicode(self.obj1.pk),
@@ -92,6 +102,9 @@ class TestForms(SettingsTestCase):
         new_obj = form.save()
         self.assertEqual(set(new_obj.m2m_field.all()), set([self.obj1, self.obj2]))
 
+        form = self.ModelFormSingle(instance=new_obj)
+        self.assertEqual(set(form.initial['m2m_field']),  set([self.obj1.pk, self.obj2.pk]))
+
     def test_modelform_multiple_without_choices(self):
         form = self.ModelFormMultipleWithoutChoices({'m2m_field': [unicode(self.obj1.pk),
                                                                    unicode(self.obj2.pk)],
@@ -104,3 +117,10 @@ class TestForms(SettingsTestCase):
                                                             'name': u'Name1'})
         self.assertTrue(isinstance(form.fields['m2m_field'], ModelMultipleChoiceField))
         self.assertEqual(form.fields['name'].widget.attrs['cols'], '999')
+
+    def test_modelform_multiple_with_initials(self):
+        form = self.ModelFormMultipleWithInitials({'m2m_field': [unicode(self.obj3.pk)],
+                                       'name': u'Name1'})
+        new_obj = form.save()
+        form = self.ModelFormMultipleWithInitials(instance=new_obj)
+        self.assertEqual(set(form.initial['m2m_field']), set([self.obj1.pk, self.obj2.pk]))
