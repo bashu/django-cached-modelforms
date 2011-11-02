@@ -9,7 +9,7 @@ from django.core.validators import EMPTY_VALUES
 from django.core.exceptions import ValidationError
 
 
-class ModelChoiceField(ChoiceField):
+class CachedModelChoiceField(ChoiceField):
     '''
     ``ModelChoiceField`` that accepts ``objects`` argument.
 
@@ -28,7 +28,7 @@ class ModelChoiceField(ChoiceField):
         else:
             self.empty_label = empty_label
         self.objects = objects
-        super(ModelChoiceField, self).__init__(choices=self.choices,
+        super(CachedModelChoiceField, self).__init__(choices=self.choices,
                                                required=required,
                                                widget=widget, label=label,
                                                initial=initial,
@@ -70,7 +70,7 @@ class ModelChoiceField(ChoiceField):
     def validate(self, value):
         return Field.validate(self, value)
 
-class ModelMultipleChoiceField(ModelChoiceField):
+class CachedModelMultipleChoiceField(CachedModelChoiceField):
     '''
     ``ModelMultipleChoiceField`` that accepts ``objects`` argument.
 
@@ -88,7 +88,7 @@ class ModelMultipleChoiceField(ModelChoiceField):
     def __init__(self, objects=(), required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
-        super(ModelMultipleChoiceField, self).__init__(objects, None, required,
+        super(CachedModelMultipleChoiceField, self).__init__(objects, None, required,
                                                        widget, label, initial,
                                                        help_text, *args,
                                                        **kwargs)

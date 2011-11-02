@@ -4,7 +4,7 @@ from django.utils.encoding import smart_unicode
 
 from cached_modelforms.tests.utils import SettingsTestCase
 from cached_modelforms.tests.models import SimpleModel
-from cached_modelforms import ModelChoiceField, ModelMultipleChoiceField
+from cached_modelforms import CachedModelChoiceField, CachedModelMultipleChoiceField
 
 class TestFields(SettingsTestCase):
     def setUp(self):
@@ -17,10 +17,10 @@ class TestFields(SettingsTestCase):
         self.cached_list = [self.obj1, self.obj2, self.obj3]
 
         class FormSingle(forms.Form):
-            obj = ModelChoiceField(objects=self.cached_list, required=False)
+            obj = CachedModelChoiceField(objects=self.cached_list, required=False)
 
         class FormMultiple(forms.Form):
-            obj = ModelMultipleChoiceField(objects=self.cached_list, required=False)
+            obj = CachedModelMultipleChoiceField(objects=self.cached_list, required=False)
 
         self.FormSingle = FormSingle
         self.FormMultiple = FormMultiple
@@ -29,11 +29,11 @@ class TestFields(SettingsTestCase):
         '''
         Test, how the field accepts different types of ``objects`` argument.
         '''
-        as_list = ModelChoiceField(objects=self.cached_list)
-        as_iterable = ModelChoiceField(objects=iter(self.cached_list))
+        as_list = CachedModelChoiceField(objects=self.cached_list)
+        as_iterable = CachedModelChoiceField(objects=iter(self.cached_list))
         list_of_tuples = [(x.pk, x) for x in self.cached_list]
-        as_list_of_tuples = ModelChoiceField(objects=list_of_tuples)
-        as_dict = ModelChoiceField(objects=dict(list_of_tuples))
+        as_list_of_tuples = CachedModelChoiceField(objects=list_of_tuples)
+        as_dict = CachedModelChoiceField(objects=dict(list_of_tuples))
 
         choices_without_empty_label = as_list.choices[:]
         if as_list.empty_label is not None:
@@ -56,11 +56,11 @@ class TestFields(SettingsTestCase):
         '''
         Test, how the field accepts different types of ``objects`` argument.
         '''
-        as_list = ModelMultipleChoiceField(objects=self.cached_list)
-        as_iterable = ModelMultipleChoiceField(objects=iter(self.cached_list))
+        as_list = CachedModelMultipleChoiceField(objects=self.cached_list)
+        as_iterable = CachedModelMultipleChoiceField(objects=iter(self.cached_list))
         list_of_tuples = [(x.pk, x) for x in self.cached_list]
-        as_list_of_tuples = ModelMultipleChoiceField(objects=list_of_tuples)
-        as_dict = ModelMultipleChoiceField(objects=dict(list_of_tuples))
+        as_list_of_tuples = CachedModelMultipleChoiceField(objects=list_of_tuples)
+        as_dict = CachedModelMultipleChoiceField(objects=dict(list_of_tuples))
 
         # make sure all of the ``choices`` attrs are the same
         self.assertTrue(as_list.choices == as_iterable.choices == as_list_of_tuples.choices == as_dict.choices)
@@ -119,16 +119,16 @@ class TestFields(SettingsTestCase):
         self.assertTrue(form._errors['obj'])
 
     def test_modelchoicefield_objects_assignment(self):
-        field = ModelChoiceField(objects=self.cached_list)
-        field2 = ModelChoiceField(objects=self.cached_list[:2])
+        field = CachedModelChoiceField(objects=self.cached_list)
+        field2 = CachedModelChoiceField(objects=self.cached_list[:2])
         field.objects = self.cached_list[:2]
 
         self.assertEqual(field.objects, field2.objects)
         self.assertEqual(field.choices, field2.choices)
 
     def test_modelmultiplechoicefield_objects_assignment(self):
-        field = ModelMultipleChoiceField(objects=self.cached_list)
-        field2 = ModelMultipleChoiceField(objects=self.cached_list[:2])
+        field = CachedModelMultipleChoiceField(objects=self.cached_list)
+        field2 = CachedModelMultipleChoiceField(objects=self.cached_list[:2])
         field.objects = self.cached_list[:2]
 
         self.assertEqual(field.objects, field2.objects)

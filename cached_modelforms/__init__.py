@@ -1,3 +1,3 @@
 # -*- coding:utf-8 -*-
-from fields import ModelChoiceField, ModelMultipleChoiceField
+from fields import CachedModelChoiceField, CachedModelMultipleChoiceField
 from forms import ModelForm

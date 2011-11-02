@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 '''
-The realisation of ``ModelForm`` that uses ``ModelChoiceField`` and
-``ModelMultipleChoiceField`` from fields.py
+The realisation of ``ModelForm`` that uses ``CachedModelChoiceField`` and
+``CachedModelMultipleChoiceField`` from fields.py
 '''
 
 from django.db.models import ForeignKey, ManyToManyField
@@ -11,10 +11,10 @@ from django.forms.forms import BaseForm, get_declared_fields
 from django.forms.util import ErrorList
 from django.core.exceptions import FieldError
 
-from fields import ModelChoiceField, ModelMultipleChoiceField
+from fields import CachedModelChoiceField, CachedModelMultipleChoiceField
 
 
-def make_formfield_callback(another_func, choices):
+def make_formfield_callback(another_func, objects):
     '''
     Decorator that creates ``formfield_callback`` function (that makes
     ``ModelForm`` to use desired form field for certain model fields).
@@ -24,12 +24,12 @@ def make_formfield_callback(another_func, choices):
     ``ManyToManyField``).
     '''
     def formfield_callback(f, **kwargs):
-        if f.name in choices:
-            kwargs['objects'] = choices[f.name]
+        if f.name in objects:
+            kwargs['objects'] = objects[f.name]
             if isinstance(f, ForeignKey):
-                return ModelChoiceField(**kwargs)
+                return CachedModelChoiceField(**kwargs)
             elif isinstance(f, ManyToManyField):
-                return ModelMultipleChoiceField(**kwargs)
+                return CachedModelMultipleChoiceField(**kwargs)
         if another_func is not None:
             return another_func(f, **kwargs)
         else:
@@ -38,17 +38,17 @@ def make_formfield_callback(another_func, choices):
 
 class CachedModelFormOptions(ModelFormOptions):
     '''
-    ``ModelFormOptions`` version that also extracts ``choices`` param.
+    ``ModelFormOptions`` version that also extracts ``objects`` param.
     '''
     def __init__(self, options=None):
         super(CachedModelFormOptions, self).__init__(options)
-        self.choices = getattr(options, 'choices', None)
+        self.objects = getattr(options, 'objects', None)
         self.m2m_initials = getattr(options, 'm2m_initials', None)
 
 class CachedModelFormMetaclass(type):
     '''
     ``ModelFormMetaclass`` version that applies ``make_formfield_callback``
-    decorator and passess ``opts.choices`` to it if neccessary.
+    decorator and passess ``opts.objects`` to it if neccessary.
 
     I had to do a lot of copy-pasting from ``ModelFormMetaclass``
     source, it's impossible (at least for me) to alter it desired way
@@ -70,8 +70,8 @@ class CachedModelFormMetaclass(type):
         if 'media' not in attrs:
             new_class.media = media_property(new_class)
         opts = new_class._meta = CachedModelFormOptions(getattr(new_class, 'Meta', None))
-        if opts.choices:
-            formfield_callback = make_formfield_callback(formfield_callback, opts.choices)
+        if opts.objects:
+            formfield_callback = make_formfield_callback(formfield_callback, opts.objects)
         if opts.model:
             # If a model is defined, extract form fields from it.
             fields = fields_for_model(opts.model, opts.fields,
@@ -160,13 +160,13 @@ class CachedBaseModelForm(BaseModelForm):
 
 class ModelForm(CachedBaseModelForm):
     '''
-    ``ModelForm`` that uses ``ModelChoiceField`` and
-    ``ModelMultipleChoiceField`` from fields.py.
+    ``ModelForm`` that uses ``CachedModelChoiceField`` and
+    ``CachedModelMultipleChoiceField`` from fields.py.
 
-    Choices are passed in ``Meta`` like this::
+    Objects are passed in ``Meta`` like this::
 
         class Meta:
-            choices = {'field_name_1': choices1,
-                       'field_name_2': choices2, ...}
+            objects = {'field_name_1': objects1,
+                       'field_name_2': objects2, ...}
     '''
     __metaclass__ = CachedModelFormMetaclass
