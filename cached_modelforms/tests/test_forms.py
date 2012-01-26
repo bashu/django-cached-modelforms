@@ -26,12 +26,12 @@ class TestForms(SettingsTestCase):
         self.obj2 = SimpleModel.objects.create(name=u'name2')
         self.obj3 = SimpleModel.objects.create(name=u'name3')
 
-        self.cached_list = [self.obj1, self.obj2, self.obj3]
+        self.get_objects = lambda: [self.obj1, self.obj2, self.obj3]
 
         class ModelFormSingle(ModelForm):
             class Meta:
                 model = ModelWithForeignKey
-                objects = {'fk_field': self.cached_list}
+                objects = {'fk_field': self.get_objects}
 
         class ModelFormSingleWithoutObjects(ModelForm):
             class Meta:
@@ -42,12 +42,12 @@ class TestForms(SettingsTestCase):
 
             class Meta:
                 model = ModelWithForeignKey
-                objects = {'fk_field': self.cached_list}
+                objects = {'fk_field': self.get_objects}
 
         class ModelFormMultiple(ModelForm):
             class Meta:
                 model = ModelWithM2m
-                objects = {'m2m_field': self.cached_list}
+                objects = {'m2m_field': self.get_objects}
 
         class ModelFormMultipleWithoutObjects(ModelForm):
             class Meta:
@@ -58,12 +58,12 @@ class TestForms(SettingsTestCase):
 
             class Meta:
                 model = ModelWithM2m
-                objects = {'m2m_field': self.cached_list}
+                objects = {'m2m_field': self.get_objects}
 
         class ModelFormMultipleWithInitials(ModelForm):
             class Meta:
                 model = ModelWithM2m
-                objects = {'m2m_field': self.cached_list}
+                objects = {'m2m_field': self.get_objects}
                 m2m_initials = {'m2m_field': (lambda instance: [self.obj1.pk, self.obj2.pk])}
 
         self.ModelFormSingle = ModelFormSingle

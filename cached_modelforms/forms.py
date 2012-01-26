@@ -10,6 +10,7 @@ from django.forms.widgets import media_property
 from django.forms.forms import BaseForm, get_declared_fields
 from django.forms.util import ErrorList
 from django.core.exceptions import FieldError
+from django.utils.text import capfirst
 
 from fields import CachedModelChoiceField, CachedModelMultipleChoiceField
 
@@ -25,7 +26,10 @@ def make_formfield_callback(another_func, objects):
     '''
     def formfield_callback(f, **kwargs):
         if f.name in objects:
-            kwargs['objects'] = objects[f.name]
+            kwargs['objects'] = ()
+            kwargs.update({'required': not f.blank,
+                           'label': capfirst(f.verbose_name),
+                           'help_text': f.help_text})
             if isinstance(f, ForeignKey):
                 return CachedModelChoiceField(**kwargs)
             elif isinstance(f, ManyToManyField):
@@ -157,6 +161,11 @@ class CachedBaseModelForm(BaseModelForm):
         self._validate_unique = False
         BaseForm.__init__(self, data, files, auto_id, prefix, object_data,
                            error_class, label_suffix, empty_permitted)
+        if opts.objects:
+            for field_name, get_objects in opts.objects.iteritems():
+                field = self.fields.get(field_name)
+                if isinstance(field, (CachedModelChoiceField, CachedModelMultipleChoiceField)):
+                    field.objects = get_objects()
 
 class ModelForm(CachedBaseModelForm):
     '''
