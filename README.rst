@@ -18,18 +18,19 @@ The solution
 =========================
 
 Form with ``CachedModelChoiceField``::
+     
      from cached_modelforms import CachedModelChoiceField
      
      class MyForm(forms.Form):
-        obj = CachedModelChoiceField(objects=[obj1, obj2, obj3])
+        obj = CachedModelChoiceField(objects=lambda:[obj1, obj2, obj3])
     
-This field will act like regular ``ModelChoiceField``, but you pass the list of objects, not queryset, to it.
+This field will act like regular ``ModelChoiceField``, but you pass a callable that returns the list of objects, not queryset, to it. Calable is needed because we don't want to evaluate out list only once.
 
-You can pass it in three different ways:
+A callable can return:
 
-* as a list of objects: ``[obj1, obj2, obj3, ...]``. ``obj`` should have ``pk`` property and be coercible to unicode.
-* as a list of tuples: ``[(pk1, obj1), (pk2, obj2), (pk3, obj3), ...]``.
-* as a dict: ``{pk1: obj1, pk2: obj2, pk3: obj3, ...}``. Note that ``dict`` is unsorted so the items will be ordered by ``pk`` lexicographically.
+* a list of objects: ``[obj1, obj2, obj3, ...]``. ``obj`` should have ``pk`` property and be coercible to unicode.
+* a list of tuples: ``[(pk1, obj1), (pk2, obj2), (pk3, obj3), ...]``.
+* a dict: ``{pk1: obj1, pk2: obj2, pk3: obj3, ...}``. Note that ``dict`` is unsorted so the items will be ordered by ``pk`` lexicographically.
 
 Same is for ``CachedModelMultipleChoiceField``.
 
@@ -61,7 +62,7 @@ But what about modelforms? They still use original ``ModelChoiceField`` for ``Fo
         class Meta:
             model = Product
             objects = {
-                'category': [...], # your cached list here
+                'category': [...], # your callable here
                 'tags': [...], # and here
             }
         
