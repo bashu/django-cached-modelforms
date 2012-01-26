@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name = "django-cached-modelforms",
-    version = "0.1.0",
+    version = "0.2.0",
     license = "BSD",
     description = "ModelChoiceField implementation that can accept lists of objects, not just querysets",
     long_description = read('README.rst'),
