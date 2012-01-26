@@ -1,21 +1,19 @@
-﻿# -*- coding:utf-8 -*-
-import os
-from setuptools import setup, find_packages
+﻿#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+from distutils.core import setup
 
-
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name = "django-cached-modelforms",
-    version = "0.2.0",
-    license = "BSD",
+    version = '0.2.0',
+    license = 'BSD',
     description = "ModelChoiceField implementation that can accept lists of objects, not just querysets",
-    long_description = read('README.rst'),
-    author = "Vlad Starostin",
-    author_email = "drtyrsa@yandex.ru",
-    packages = find_packages(),
-    include_package_data=True,
+    long_description = open('README.rst').read(),
+    author = 'Vlad Starostin',
+    author_email = 'drtyrsa@yandex.ru',
+    packages = ['cached_modelforms',
+                'cached_modelforms.tests',
+                'cached_modelforms.tests.utils'],
     classifiers = [
         'Development Status :: 1 - Beta',
         'Framework :: Django',
