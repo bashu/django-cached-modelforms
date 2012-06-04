@@ -4,7 +4,8 @@ from django.utils.encoding import smart_unicode
 
 from cached_modelforms.tests.utils import SettingsTestCase
 from cached_modelforms.tests.models import SimpleModel
-from cached_modelforms import CachedModelChoiceField, CachedModelMultipleChoiceField
+from cached_modelforms import (CachedModelChoiceField,
+                               CachedModelMultipleChoiceField)
 
 class TestFields(SettingsTestCase):
     def setUp(self):
@@ -17,10 +18,16 @@ class TestFields(SettingsTestCase):
         self.cached_list = [self.obj1, self.obj2, self.obj3]
 
         class FormSingle(forms.Form):
-            obj = CachedModelChoiceField(objects=self.cached_list, required=False)
+            obj = CachedModelChoiceField(
+                objects=lambda:self.cached_list,
+                required=False
+            )
 
         class FormMultiple(forms.Form):
-            obj = CachedModelMultipleChoiceField(objects=self.cached_list, required=False)
+            obj = CachedModelMultipleChoiceField(
+                objects=lambda:self.cached_list,
+                required=False
+            )
 
         self.FormSingle = FormSingle
         self.FormMultiple = FormMultiple
@@ -29,51 +36,91 @@ class TestFields(SettingsTestCase):
         '''
         Test, how the field accepts different types of ``objects`` argument.
         '''
-        as_list = CachedModelChoiceField(objects=self.cached_list)
-        as_iterable = CachedModelChoiceField(objects=iter(self.cached_list))
+        as_list = CachedModelChoiceField(objects=lambda:self.cached_list)
+        as_iterable = CachedModelChoiceField(
+            objects=lambda:iter(self.cached_list)
+        )
         list_of_tuples = [(x.pk, x) for x in self.cached_list]
-        as_list_of_tuples = CachedModelChoiceField(objects=list_of_tuples)
-        as_dict = CachedModelChoiceField(objects=dict(list_of_tuples))
+        as_list_of_tuples = CachedModelChoiceField(
+            objects=lambda:list_of_tuples
+        )
+        as_dict = CachedModelChoiceField(objects=lambda:dict(list_of_tuples))
 
         choices_without_empty_label = as_list.choices[:]
         if as_list.empty_label is not None:
             choices_without_empty_label.pop(0)
 
         # make sure all of the ``choices`` attrs are the same
-        self.assertTrue(as_list.choices == as_iterable.choices == as_list_of_tuples.choices == as_dict.choices)
+        self.assertTrue(
+            as_list.choices ==
+            as_iterable.choices ==
+            as_list_of_tuples.choices ==
+            as_dict.choices
+        )
 
         # same for ``objects``
-        self.assertTrue(as_list.objects == as_iterable.objects == as_list_of_tuples.objects == as_dict.objects)
+        self.assertTrue(
+            as_list.objects ==
+            as_iterable.objects ==
+            as_list_of_tuples.objects ==
+            as_dict.objects
+        )
 
         # ``objects`` should be a dict as ``{smart_unicode(pk1): obj1, ...}``
-        self.assertEqual(set(as_list.objects.keys()), set([smart_unicode(x.pk) for x in self.cached_list]))
+        self.assertEqual(
+            set(as_list.objects.keys()),
+            set(smart_unicode(x.pk) for x in self.cached_list)
+        )
         self.assertEqual(set(as_list.objects.values()), set(self.cached_list))
 
         # ``choices`` should be a list as ``[(smart_unicode(pk1), smart_unicode(obj1)), ...]``
-        self.assertEqual(choices_without_empty_label, [(smart_unicode(x.pk), smart_unicode(x)) for x in self.cached_list])
+        self.assertEqual(
+            choices_without_empty_label,
+            [(smart_unicode(x.pk), smart_unicode(x)) for x in self.cached_list]
+        )
 
     def test_modelmultiplechoicefield_objects_arg(self):
         '''
         Test, how the field accepts different types of ``objects`` argument.
         '''
-        as_list = CachedModelMultipleChoiceField(objects=self.cached_list)
-        as_iterable = CachedModelMultipleChoiceField(objects=iter(self.cached_list))
+        as_list = CachedModelMultipleChoiceField(
+            objects=lambda:self.cached_list
+        )
+        as_iterable = CachedModelMultipleChoiceField(
+            objects=lambda:iter(self.cached_list)
+        )
         list_of_tuples = [(x.pk, x) for x in self.cached_list]
-        as_list_of_tuples = CachedModelMultipleChoiceField(objects=list_of_tuples)
+        as_list_of_tuples = CachedModelMultipleChoiceField(
+            objects=lambda:list_of_tuples
+        )
         as_dict = CachedModelMultipleChoiceField(objects=dict(list_of_tuples))
 
         # make sure all of the ``choices`` attrs are the same
-        self.assertTrue(as_list.choices == as_iterable.choices == as_list_of_tuples.choices == as_dict.choices)
+        self.assertTrue(
+            as_list.choices ==
+            as_iterable.choices ==
+            as_list_of_tuples.choices ==
+            as_dict.choices)
 
         # same for ``objects``
-        self.assertTrue(as_list.objects == as_iterable.objects == as_list_of_tuples.objects == as_dict.objects)
+        self.assertTrue(
+            as_list.objects ==
+            as_iterable.objects ==
+            as_list_of_tuples.objects ==
+            as_dict.objects)
 
         # ``objects`` should be a dict as ``{smart_unicode(pk1): obj1, ...}``
-        self.assertEqual(set(as_list.objects.keys()), set([smart_unicode(x.pk) for x in self.cached_list]))
+        self.assertEqual(
+            set(as_list.objects.keys()),
+            set(smart_unicode(x.pk) for x in self.cached_list)
+        )
         self.assertEqual(set(as_list.objects.values()), set(self.cached_list))
 
         # ``choices`` should be a list as ``[(smart_unicode(pk1), smart_unicode(obj1)), ...]``
-        self.assertEqual(as_list.choices, [(smart_unicode(x.pk), smart_unicode(x)) for x in self.cached_list])
+        self.assertEqual(
+            as_list.choices,
+            [(smart_unicode(x.pk), smart_unicode(x)) for x in self.cached_list]
+        )
 
     def test_modelchoicefield_behavior(self):
         '''
