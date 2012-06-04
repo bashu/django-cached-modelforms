@@ -5,7 +5,7 @@ from distutils.core import setup
 
 setup(
     name = "django-cached-modelforms",
-    version = '0.2.0',
+    version = '0.2.1',
     license = 'BSD',
     description = "ModelChoiceField implementation that can accept lists of objects, not just querysets",
     long_description = open('README.rst').read(),
