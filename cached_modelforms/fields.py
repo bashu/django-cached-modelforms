@@ -30,12 +30,16 @@ class CachedModelChoiceField(ChoiceField):
         if callable(objects):
             objects = objects()
         self.objects = objects
-        super(CachedModelChoiceField, self).__init__(choices=self.choices,
-                                               required=required,
-                                               widget=widget, label=label,
-                                               initial=initial,
-                                               help_text=help_text,
-                                               *args, **kwargs)
+        super(CachedModelChoiceField, self).__init__(
+            choices=self.choices,
+            required=required,
+            widget=widget,
+            label=label,
+            initial=initial,
+            help_text=help_text,
+            *args,
+            **kwargs
+        )
 
     @property
     def objects(self):
@@ -44,17 +48,26 @@ class CachedModelChoiceField(ChoiceField):
     @objects.setter
     def objects(self, value):
         if isinstance(value, dict):
-            self._objects = dict((smart_unicode(k), v) for k, v in value.iteritems())
-            self.choices = [(x, smart_unicode(self._objects[x])) for x in sorted(self._objects.keys())]
+            self._objects = dict(
+                (smart_unicode(k), v) for k, v in value.iteritems()
+            )
+            self.choices = [(x, smart_unicode(self._objects[x]))
+                            for x in sorted(self._objects.keys())]
         else:
             objects = list(value)
             if objects:
                 if isinstance(objects[0], (list, tuple)):
-                    self._objects = dict((smart_unicode(k), v) for k, v in objects)
-                    self.choices = [(smart_unicode(k), smart_unicode(v)) for k, v in objects]
+                    self._objects = dict(
+                        (smart_unicode(k), v) for k, v in objects
+                    )
+                    self.choices = [(smart_unicode(k), smart_unicode(v))
+                                    for k, v in objects]
                 else:
-                    self._objects = dict((smart_unicode(x.pk), x) for x in objects)
-                    self.choices = [(smart_unicode(x.pk), smart_unicode(x)) for x in objects]
+                    self._objects = dict(
+                        (smart_unicode(x.pk), x) for x in objects
+                    )
+                    self.choices = [(smart_unicode(x.pk), smart_unicode(x))
+                                    for x in objects]
             else:
                 self._objects = {}
                 self.choices = ()
@@ -66,7 +79,9 @@ class CachedModelChoiceField(ChoiceField):
             return None
         value = smart_unicode(value)
         if value not in self.objects:
-            raise ValidationError(self.error_messages['invalid_choice'] % {'value': value})
+            raise ValidationError(
+                self.error_messages['invalid_choice'] % {'value': value}
+            )
         return self.objects[value]
 
     def validate(self, value):
@@ -90,10 +105,17 @@ class CachedModelMultipleChoiceField(CachedModelChoiceField):
     def __init__(self, objects=(), required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
-        super(CachedModelMultipleChoiceField, self).__init__(objects, None, required,
-                                                       widget, label, initial,
-                                                       help_text, *args,
-                                                       **kwargs)
+        super(CachedModelMultipleChoiceField, self).__init__(
+            objects,
+            None,
+            required,
+            widget,
+            label,
+            initial,
+            help_text,
+            *args,
+            **kwargs
+        )
 
     def to_python(self, value):
         if not value:
@@ -103,5 +125,7 @@ class CachedModelMultipleChoiceField(CachedModelChoiceField):
         try:
             result = [self.objects[x] for x in value]
         except KeyError:
-            raise ValidationError(self.error_messages['invalid_choice'] % {'value': value})
+            raise ValidationError(
+                self.error_messages['invalid_choice'] % {'value': value}
+            )
         return result
