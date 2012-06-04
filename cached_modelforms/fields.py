@@ -27,6 +27,8 @@ class CachedModelChoiceField(ChoiceField):
             self.empty_label = None
         else:
             self.empty_label = empty_label
+        if callable(objects):
+            objects = objects()
         self.objects = objects
         super(CachedModelChoiceField, self).__init__(choices=self.choices,
                                                required=required,
