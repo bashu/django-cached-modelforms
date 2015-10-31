@@ -1,18 +1,22 @@
 # -*- coding:utf-8 -*-
 '''
-The realisation of ``ModelForm`` that uses ``CachedModelChoiceField`` and
-``CachedModelMultipleChoiceField`` from fields.py
+The realisation of ``ModelForm`` that uses
+``CachedModelChoiceField`` and ``CachedModelMultipleChoiceField`` from
+fields.py
+
 '''
 
-from django.db.models import ForeignKey, ManyToManyField
-from django.forms.models import BaseModelForm, ModelFormOptions, fields_for_model
-from django.forms.widgets import media_property
-from django.forms.forms import BaseForm, get_declared_fields
+from __future__ import unicode_literals
+
+from django.utils.text import capfirst
 from django.forms.util import ErrorList
 from django.core.exceptions import FieldError
-from django.utils.text import capfirst
+from django.forms.widgets import media_property
+from django.db.models import ForeignKey, ManyToManyField
+from django.forms.forms import BaseForm, get_declared_fields
+from django.forms.models import BaseModelForm, ModelFormOptions, fields_for_model
 
-from fields import CachedModelChoiceField, CachedModelMultipleChoiceField
+from .fields import CachedModelChoiceField, CachedModelMultipleChoiceField
 
 
 def make_formfield_callback(another_func, objects):
@@ -40,6 +44,7 @@ def make_formfield_callback(another_func, objects):
             return f.formfield(**kwargs)
     return formfield_callback
 
+
 class CachedModelFormOptions(ModelFormOptions):
     '''
     ``ModelFormOptions`` version that also extracts ``objects`` param.
@@ -48,6 +53,7 @@ class CachedModelFormOptions(ModelFormOptions):
         super(CachedModelFormOptions, self).__init__(options)
         self.objects = getattr(options, 'objects', None)
         self.m2m_initials = getattr(options, 'm2m_initials', None)
+
 
 class CachedModelFormMetaclass(type):
     '''
@@ -66,8 +72,8 @@ class CachedModelFormMetaclass(type):
             # We are defining ModelForm itself.
             parents = None
         declared_fields = get_declared_fields(bases, attrs, False)
-        new_class = super(CachedModelFormMetaclass, cls).__new__(cls, name, bases,
-                attrs)
+        new_class = super(CachedModelFormMetaclass, cls).__new__(
+            cls, name, bases, attrs)
         if not parents:
             return new_class
 
@@ -81,9 +87,8 @@ class CachedModelFormMetaclass(type):
             fields = fields_for_model(opts.model, opts.fields,
                                       opts.exclude, opts.widgets, formfield_callback)
             # make sure opts.fields doesn't specify an invalid field
-            none_model_fields = [k for k, v in fields.iteritems() if not v]
-            missing_fields = set(none_model_fields) - \
-                             set(declared_fields.keys())
+            none_model_fields = [k for k, v in list(fields.items()) if not v]
+            missing_fields = set(none_model_fields) - set(declared_fields.keys())
             if missing_fields:
                 message = 'Unknown field(s) (%s) specified for %s'
                 message = message % (', '.join(missing_fields),
@@ -97,6 +102,7 @@ class CachedModelFormMetaclass(type):
         new_class.declared_fields = declared_fields
         new_class.base_fields = fields
         return new_class
+
 
 def model_to_dict(instance, fields=None, exclude=None, m2m_initials=None):
     """
@@ -119,9 +125,9 @@ def model_to_dict(instance, fields=None, exclude=None, m2m_initials=None):
     for f in opts.fields + opts.many_to_many:
         if not f.editable:
             continue
-        if fields and not f.name in fields:
+        if fields and f.name not in fields:
             continue
-        if exclude and f.name in exclude:
+        if exclude and f.name not in exclude:
             continue
         if isinstance(f, ManyToManyField):
             # If the object doesn't have a primry key yet, just use an empty
@@ -138,7 +144,9 @@ def model_to_dict(instance, fields=None, exclude=None, m2m_initials=None):
             data[f.name] = f.value_from_object(instance)
     return data
 
+
 class CachedBaseModelForm(BaseModelForm):
+
     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False, instance=None):
@@ -159,15 +167,16 @@ class CachedBaseModelForm(BaseModelForm):
         # It is False by default so overriding self.clean() and failing to call
         # super will stop validate_unique from being called.
         self._validate_unique = False
-        BaseForm.__init__(self, data, files, auto_id, prefix, object_data,
-                           error_class, label_suffix, empty_permitted)
+        BaseForm.__init__(
+            self, data, files, auto_id, prefix, object_data, error_class, label_suffix, empty_permitted)
         if opts.objects:
-            for field_name, get_objects in opts.objects.iteritems():
+            for field_name, get_objects in list(opts.objects.items()):
                 field = self.fields.get(field_name)
                 if isinstance(field, (CachedModelChoiceField, CachedModelMultipleChoiceField)):
                     field.objects = get_objects()
 
-class ModelForm(CachedBaseModelForm):
+
+class ModelForm(CachedBaseModelForm, metaclass=CachedModelFormMetaclass):
     '''
     ``ModelForm`` that uses ``CachedModelChoiceField`` and
     ``CachedModelMultipleChoiceField`` from fields.py.
@@ -178,4 +187,4 @@ class ModelForm(CachedBaseModelForm):
             objects = {'field_name_1': objects1,
                        'field_name_2': objects2, ...}
     '''
-    __metaclass__ = CachedModelFormMetaclass
+    pass

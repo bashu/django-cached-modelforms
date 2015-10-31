@@ -1,12 +1,16 @@
 # -*- coding:utf-8 -*-
-'''
-Fields.
-'''
 
-from django.forms import Field, ChoiceField, MultipleChoiceField
-from django.utils.encoding import smart_unicode
+from __future__ import unicode_literals
+
+import collections
+
 from django.core.validators import EMPTY_VALUES
 from django.core.exceptions import ValidationError
+try:
+    from django.utils.encoding import smart_unicode as smart_text
+except ImportError:
+    from django.utils.encoding import smart_text
+from django.forms import Field, ChoiceField, MultipleChoiceField
 
 
 class CachedModelChoiceField(ChoiceField):
@@ -20,14 +24,14 @@ class CachedModelChoiceField(ChoiceField):
 
     It doesn't accept ``to_field_name`` argument.
     '''
-    def __init__(self, objects=(), empty_label=u"---------", required=True,
+    def __init__(self, objects=(), empty_label="---------", required=True,
                  widget=None, label=None, initial=None, help_text=None,
                  *args, **kwargs):
         if required and (initial is not None):
             self.empty_label = None
         else:
             self.empty_label = empty_label
-        if callable(objects):
+        if isinstance(objects, collections.Callable):
             objects = objects()
         self.objects = objects
         super(CachedModelChoiceField, self).__init__(
@@ -49,35 +53,35 @@ class CachedModelChoiceField(ChoiceField):
     def objects(self, value):
         if isinstance(value, dict):
             self._objects = dict(
-                (smart_unicode(k), v) for k, v in value.iteritems()
+                (smart_text(k), v) for k, v in list(value.items())
             )
-            self.choices = [(x, smart_unicode(self._objects[x]))
+            self.choices = [(x, smart_text(self._objects[x]))
                             for x in sorted(self._objects.keys())]
         else:
             objects = list(value)
             if objects:
                 if isinstance(objects[0], (list, tuple)):
                     self._objects = dict(
-                        (smart_unicode(k), v) for k, v in objects
+                        (smart_text(k), v) for k, v in objects
                     )
-                    self.choices = [(smart_unicode(k), smart_unicode(v))
+                    self.choices = [(smart_text(k), smart_text(v))
                                     for k, v in objects]
                 else:
                     self._objects = dict(
-                        (smart_unicode(x.pk), x) for x in objects
+                        (smart_text(x.pk), x) for x in objects
                     )
-                    self.choices = [(smart_unicode(x.pk), smart_unicode(x))
+                    self.choices = [(smart_text(x.pk), smart_text(x))
                                     for x in objects]
             else:
                 self._objects = {}
                 self.choices = ()
         if self.empty_label is not None:
-            self.choices.insert(0, (u'', self.empty_label))
+            self.choices.insert(0, ('', self.empty_label))
 
     def to_python(self, value):
         if value in EMPTY_VALUES:
             return None
-        value = smart_unicode(value)
+        value = smart_text(value)
         if value not in self.objects:
             raise ValidationError(
                 self.error_messages['invalid_choice'] % {'value': value}
@@ -86,6 +90,7 @@ class CachedModelChoiceField(ChoiceField):
 
     def validate(self, value):
         return Field.validate(self, value)
+
 
 class CachedModelMultipleChoiceField(CachedModelChoiceField):
     '''
