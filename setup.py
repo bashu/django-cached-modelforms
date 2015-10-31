@@ -1,12 +1,22 @@
-# -*- coding:utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
+import sys
 import codecs
+import subprocess
 
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
 from cached_modelforms import __version__
 
+
+class TestRunner(TestCommand):
+    user_options = []
+
+    def run(self):
+        raise SystemExit(subprocess.call([sys.executable, 'runtests.py']))
+    
 
 def read(*parts):
     file_path = os.path.join(os.path.dirname(__file__), *parts)
@@ -36,6 +46,12 @@ setup(
     packages=find_packages(exclude=('example*', '*.tests*')),
     include_package_data=True,
 
+    tests_require=[
+    ],
+    cmdclass={
+        'test': TestRunner,
+    },
+
     zip_safe=False,
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -45,7 +61,8 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Topic :: Internet :: WWW/HTTP',
