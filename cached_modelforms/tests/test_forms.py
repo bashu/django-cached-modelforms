@@ -1,7 +1,12 @@
 # -*- coding:utf-8 -*-
-from django.forms.models import ModelChoiceField, ModelMultipleChoiceField
+
 from django.forms import Textarea
 from django.db.models import CharField
+try:
+    from django.utils.encoding import smart_unicode as smart_text
+except ImportError:
+    from django.utils.encoding import smart_text
+from django.forms.models import ModelChoiceField, ModelMultipleChoiceField
 
 from cached_modelforms import (ModelForm, CachedModelChoiceField,
                                CachedModelMultipleChoiceField)
@@ -24,9 +29,9 @@ class TestForms(SettingsTestCase):
     def setUp(self):
         self.settings_manager.set(INSTALLED_APPS=('cached_modelforms.tests',))
 
-        self.obj1 = SimpleModel.objects.create(name=u'name1')
-        self.obj2 = SimpleModel.objects.create(name=u'name2')
-        self.obj3 = SimpleModel.objects.create(name=u'name3')
+        self.obj1 = SimpleModel.objects.create(name='name1')
+        self.obj2 = SimpleModel.objects.create(name='name2')
+        self.obj3 = SimpleModel.objects.create(name='name3')
 
         self.get_objects = lambda: [self.obj1, self.obj2, self.obj3]
 
@@ -83,8 +88,8 @@ class TestForms(SettingsTestCase):
         Test, that ``Meta.objects`` transforms to
         ``CachedModelChoiceField.objects``.
         '''
-        form = self.ModelFormSingle({'fk_field': unicode(self.obj1.pk),
-                                     'name': u'Name1'})
+        form = self.ModelFormSingle({'fk_field': smart_text(self.obj1.pk),
+                                     'name': 'Name1'})
         self.assertTrue(
             isinstance(form.fields['fk_field'], CachedModelChoiceField)
         )
@@ -103,8 +108,8 @@ class TestForms(SettingsTestCase):
         ``ModelChoiceField`` is used.
         '''
         form = self.ModelFormSingleWithoutObjects({
-            'fk_field': unicode(self.obj1.pk),
-            'name': u'Name1'
+            'fk_field': smart_text(self.obj1.pk),
+            'name': 'Name1'
         })
         self.assertTrue(isinstance(form.fields['fk_field'], ModelChoiceField))
 
@@ -113,8 +118,8 @@ class TestForms(SettingsTestCase):
         ``formfield_callback`` function will be decorated, not overwritten
         '''
         form = self.ModelFormSingleWithFormfieldCallback({
-            'fk_field': unicode(self.obj1.pk),
-            'name': u'Name1'
+            'fk_field': smart_text(self.obj1.pk),
+            'name': 'Name1'
         })
         self.assertTrue(
             isinstance(form.fields['fk_field'], CachedModelChoiceField)
@@ -127,8 +132,8 @@ class TestForms(SettingsTestCase):
         ``CachedModelMultipleChoiceField.objects``.
         '''
         form = self.ModelFormMultiple({
-            'm2m_field': [unicode(self.obj1.pk), unicode(self.obj2.pk)],
-            'name': u'Name1'
+            'm2m_field': [smart_text(self.obj1.pk), smart_text(self.obj2.pk)],
+            'name': 'Name1'
         })
         self.assertTrue(
             isinstance(
@@ -157,8 +162,8 @@ class TestForms(SettingsTestCase):
         ``ModelMultipleChoiceField`` is used.
         '''
         form = self.ModelFormMultipleWithoutObjects({
-            'm2m_field': [unicode(self.obj1.pk), unicode(self.obj2.pk)],
-            'name': u'Name1'
+            'm2m_field': [smart_text(self.obj1.pk), smart_text(self.obj2.pk)],
+            'name': 'Name1'
         })
         self.assertTrue(
             isinstance(form.fields['m2m_field'], ModelMultipleChoiceField)
@@ -169,8 +174,8 @@ class TestForms(SettingsTestCase):
         ``formfield_callback`` function will be decorated, not overwritten
         '''
         form = self.ModelFormMultipleWithFormfieldCallback({
-            'm2m_field': [unicode(self.obj1.pk), unicode(self.obj2.pk)],
-            'name': u'Name1'})
+            'm2m_field': [smart_text(self.obj1.pk), smart_text(self.obj2.pk)],
+            'name': 'Name1'})
         self.assertTrue(
             isinstance(
                 form.fields['m2m_field'],
@@ -185,8 +190,8 @@ class TestForms(SettingsTestCase):
         ``Meta.m2m_initials``. There will be no DB request.
         '''
         form = self.ModelFormMultipleWithInitials({
-            'm2m_field': [unicode(self.obj3.pk)],
-            'name': u'Name1'})
+            'm2m_field': [smart_text(self.obj3.pk)],
+            'name': 'Name1'})
         new_obj = form.save()
         form = self.ModelFormMultipleWithInitials(instance=new_obj)
         self.assertEqual(

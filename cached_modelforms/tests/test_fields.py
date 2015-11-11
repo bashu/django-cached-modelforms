@@ -1,19 +1,24 @@
 # -*- coding:utf-8 -*-
+
 from django import forms
-from django.utils.encoding import smart_unicode
+try:
+    from django.utils.encoding import smart_unicode as smart_text
+except ImportError:
+    from django.utils.encoding import smart_text
 
 from cached_modelforms.tests.utils import SettingsTestCase
 from cached_modelforms.tests.models import SimpleModel
-from cached_modelforms import (CachedModelChoiceField,
-                               CachedModelMultipleChoiceField)
+from cached_modelforms import (
+    CachedModelChoiceField, CachedModelMultipleChoiceField)
+
 
 class TestFields(SettingsTestCase):
     def setUp(self):
         self.settings_manager.set(INSTALLED_APPS=('cached_modelforms.tests',))
 
-        self.obj1 = SimpleModel.objects.create(name=u'name1')
-        self.obj2 = SimpleModel.objects.create(name=u'name2')
-        self.obj3 = SimpleModel.objects.create(name=u'name3')
+        self.obj1 = SimpleModel.objects.create(name='name1')
+        self.obj2 = SimpleModel.objects.create(name='name2')
+        self.obj3 = SimpleModel.objects.create(name='name3')
 
         self.cached_list = [self.obj1, self.obj2, self.obj3]
 
@@ -66,17 +71,17 @@ class TestFields(SettingsTestCase):
             as_dict.objects
         )
 
-        # ``objects`` should be a dict as ``{smart_unicode(pk1): obj1, ...}``
+        # ``objects`` should be a dict as ``{smart_text(pk1): obj1, ...}``
         self.assertEqual(
             set(as_list.objects.keys()),
-            set(smart_unicode(x.pk) for x in self.cached_list)
+            set(smart_text(x.pk) for x in self.cached_list)
         )
         self.assertEqual(set(as_list.objects.values()), set(self.cached_list))
 
-        # ``choices`` should be a list as ``[(smart_unicode(pk1), smart_unicode(obj1)), ...]``
+        # ``choices`` should be a list as ``[(smart_text(pk1), smart_text(obj1)), ...]``
         self.assertEqual(
             choices_without_empty_label,
-            [(smart_unicode(x.pk), smart_unicode(x)) for x in self.cached_list]
+            [(smart_text(x.pk), smart_text(x)) for x in self.cached_list]
         )
 
     def test_modelmultiplechoicefield_objects_arg(self):
@@ -109,17 +114,17 @@ class TestFields(SettingsTestCase):
             as_list_of_tuples.objects ==
             as_dict.objects)
 
-        # ``objects`` should be a dict as ``{smart_unicode(pk1): obj1, ...}``
+        # ``objects`` should be a dict as ``{smart_text(pk1): obj1, ...}``
         self.assertEqual(
             set(as_list.objects.keys()),
-            set(smart_unicode(x.pk) for x in self.cached_list)
+            set(smart_text(x.pk) for x in self.cached_list)
         )
         self.assertEqual(set(as_list.objects.values()), set(self.cached_list))
 
-        # ``choices`` should be a list as ``[(smart_unicode(pk1), smart_unicode(obj1)), ...]``
+        # ``choices`` should be a list as ``[(smart_text(pk1), smart_text(obj1)), ...]``
         self.assertEqual(
             as_list.choices,
-            [(smart_unicode(x.pk), smart_unicode(x)) for x in self.cached_list]
+            [(smart_text(x.pk), smart_text(x)) for x in self.cached_list]
         )
 
     def test_modelchoicefield_behavior(self):
@@ -127,7 +132,7 @@ class TestFields(SettingsTestCase):
         Test, how the field handles data in form.
         '''
         # some value
-        form = self.FormSingle({'obj': unicode(self.obj1.pk)})
+        form = self.FormSingle({'obj': smart_text(self.obj1.pk)})
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['obj'], self.obj1)
 
@@ -137,7 +142,7 @@ class TestFields(SettingsTestCase):
         self.assertEqual(form.cleaned_data['obj'], None)
 
         # invalid value
-        form = self.FormSingle({'obj': u'-1'})
+        form = self.FormSingle({'obj': '-1'})
         self.assertFalse(form.is_valid())
         self.assertTrue(form._errors['obj'])
 
@@ -146,7 +151,7 @@ class TestFields(SettingsTestCase):
         Test, how the field handles data in form.
         '''
         # some value
-        form = self.FormMultiple({'obj': [unicode(self.obj1.pk), unicode(self.obj2.pk)]})
+        form = self.FormMultiple({'obj': [smart_text(self.obj1.pk), smart_text(self.obj2.pk)]})
         self.assertTrue(form.is_valid())
         self.assertEqual(set(form.cleaned_data['obj']), set([self.obj1, self.obj2]))
 
@@ -156,12 +161,12 @@ class TestFields(SettingsTestCase):
         self.assertEqual(form.cleaned_data['obj'], [])
 
         # invalid value
-        form = self.FormMultiple({'obj': [unicode(self.obj1.pk), u'-1']})
+        form = self.FormMultiple({'obj': [smart_text(self.obj1.pk), '-1']})
         self.assertFalse(form.is_valid())
         self.assertTrue(form._errors['obj'])
 
         # invalid list
-        form = self.FormMultiple({'obj': u'-1'})
+        form = self.FormMultiple({'obj': '-1'})
         self.assertFalse(form.is_valid())
         self.assertTrue(form._errors['obj'])
 

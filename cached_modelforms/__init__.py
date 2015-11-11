@@ -1,3 +1,4 @@
-# -*- coding:utf-8 -*-
-from fields import CachedModelChoiceField, CachedModelMultipleChoiceField
-from forms import ModelForm
+__version__ = "0.2.1"
+
+from .fields import CachedModelChoiceField, CachedModelMultipleChoiceField
+from .forms import ModelForm
