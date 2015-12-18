@@ -16,6 +16,8 @@ from django.db.models import ForeignKey, ManyToManyField
 from django.forms.forms import BaseForm, get_declared_fields
 from django.forms.models import BaseModelForm, ModelFormOptions, fields_for_model
 
+from six import with_metaclass
+
 from .fields import CachedModelChoiceField, CachedModelMultipleChoiceField
 
 
@@ -176,7 +178,7 @@ class CachedBaseModelForm(BaseModelForm):
                     field.objects = get_objects()
 
 
-class ModelForm(CachedBaseModelForm, metaclass=CachedModelFormMetaclass):
+class ModelForm(with_metaclass(CachedModelFormMetaclass, CachedBaseModelForm)):
     '''
     ``ModelForm`` that uses ``CachedModelChoiceField`` and
     ``CachedModelMultipleChoiceField`` from fields.py.
