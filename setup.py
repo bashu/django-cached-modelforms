@@ -29,6 +29,7 @@ setup(
     license='BSD License',
 
     install_requires=[
+        'six',
     ],
     requires=[
         'Django (>=1.4)',
