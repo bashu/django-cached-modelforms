@@ -8,8 +8,6 @@ import subprocess
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-from cached_modelforms import __version__
-
 
 class TestRunner(TestCommand):
     user_options = []
@@ -25,7 +23,7 @@ def read(*parts):
 
 setup(
     name="django-cached-modelforms",
-    version=__version__,
+    version="0.2.1",
     license='BSD License',
 
     install_requires=[
