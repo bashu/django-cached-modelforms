@@ -23,7 +23,7 @@ def read(*parts):
 
 setup(
     name="django-cached-modelforms",
-    version="0.2.1",
+    version="0.2.2",
     license='BSD License',
 
     install_requires=[
