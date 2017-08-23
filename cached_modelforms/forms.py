@@ -11,7 +11,10 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 
 from django.utils.text import capfirst
-from django.forms.utils import ErrorList
+try:
+    from django.forms.utils import ErrorList
+except ImportError:
+    from django.forms.util import ErrorList
 from django.core.exceptions import FieldError
 from django.forms.widgets import media_property
 from django.db.models import ForeignKey, ManyToManyField
