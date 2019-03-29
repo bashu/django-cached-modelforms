@@ -8,9 +8,9 @@ easily revert them back when you're done.
 Snippet taken from: http://www.djangosnippets.org/snippets/1011/
 """
 
+from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
-from django.db.models import loading
 from django.test import TestCase
 
 NO_SETTING = ('!', None)
@@ -36,8 +36,8 @@ class TestSettingsManager(object):
             self.syncdb()
 
     def syncdb(self):
-        loading.cache.loaded = False
-        call_command('syncdb', verbosity=0)
+        apps.loaded = False
+        call_command('migrate', verbosity=0)
 
     def revert(self):
         for k,v in list(self._original_settings.items()):
