@@ -4,6 +4,20 @@ Django Cached Modelforms
 
 The application provides ``ModelForm``, ``ModelChoiceField``, ``ModelMultipleChoiceField`` implementations that can accept lists of objects, not just querysets. This can prevent these fields from hitting DB every time they are created.
 
+Authored by `Vlad Starostin <https://github.com/drtyrsa>`_, and some great `contributors <https://github.com/drtyrsa/django-cached-modelforms/contributors>`_.
+
+.. image:: https://img.shields.io/pypi/v/django-cached-modelforms.svg
+    :target: https://pypi.python.org/pypi/django-cached-modelforms/
+
+.. image:: https://img.shields.io/pypi/dm/django-cached-modelforms.svg
+    :target: https://pypi.python.org/pypi/django-cached-modelforms/
+
+.. image:: https://img.shields.io/github/license/drtyrsa/django-cached-modelforms.svg
+    :target: https://pypi.python.org/pypi/django-cached-modelforms/
+
+.. image:: https://img.shields.io/travis/drtyrsa/django-cached-modelforms.svg
+    :target: https://travis-ci.org/drtyrsa/django-cached-modelforms/
+
 The problem
 =========================
 
