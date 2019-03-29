@@ -9,7 +9,7 @@ class SimpleModel(models.Model):
 
 class ModelWithForeignKey(models.Model):
     name = models.CharField(max_length=8)
-    fk_field = models.ForeignKey(SimpleModel)
+    fk_field = models.ForeignKey(SimpleModel, on_delete=models.CASCADE)
 
 
 class ModelWithM2m(models.Model):
