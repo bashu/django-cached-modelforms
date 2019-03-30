@@ -1,29 +1,29 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import sys
 import codecs
-import subprocess
 
 from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
 
-
-class TestRunner(TestCommand):
-    user_options = []
-
-    def run(self):
-        raise SystemExit(subprocess.call([sys.executable, 'runtests.py']))
-    
 
 def read(*parts):
     file_path = os.path.join(os.path.dirname(__file__), *parts)
     return codecs.open(file_path, encoding='utf-8').read()
 
 
+def find_version(*parts):
+    version_file = read(*parts)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
+    if version_match:
+        return str(version_match.group(1))
+    raise RuntimeError("Unable to find version string.")
+
+
 setup(
     name="django-cached-modelforms",
-    version="0.2.3",
+    version=find_version('cached_modelforms', '__init__.py'),
     license='BSD License',
 
     install_requires=[
@@ -49,14 +49,14 @@ setup(
     include_package_data=True,
 
     tests_require=[
+        'django-setuptest',
     ],
-    cmdclass={
-        'test': TestRunner,
-    },
+    test_suite='setuptest.setuptest.SetupTestSuite',
 
     zip_safe=False,
     classifiers=[
         'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
@@ -68,6 +68,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ]
 )
