@@ -1,10 +1,5 @@
-PROJECT_APPS = [
-    'cached_modelforms',
-]
 
-INSTALLED_APPS = [
-    'django.contrib.contenttypes',
-] + PROJECT_APPS
+SECRET_KEY = 'DUMMY_SECRET_KEY'
 
 DATABASES = {
     'default': {
@@ -12,3 +7,11 @@ DATABASES = {
         'NAME': ':memory:'
     }
 }
+
+PROJECT_APPS = [
+    'cached_modelforms',
+]
+
+INSTALLED_APPS = [
+    'django.contrib.contenttypes',
+] + PROJECT_APPS

@@ -48,11 +48,6 @@ setup(
     packages=find_packages(exclude=('example*', '*.tests*')),
     include_package_data=True,
 
-    tests_require=[
-        'django-setuptest',
-    ],
-    test_suite='setuptest.setuptest.SetupTestSuite',
-
     zip_safe=False,
     classifiers=[
         'Development Status :: 4 - Beta',
