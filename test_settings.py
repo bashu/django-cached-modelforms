@@ -1,17 +1,11 @@
+SECRET_KEY = "DUMMY_SECRET_KEY"
 
-SECRET_KEY = 'DUMMY_SECRET_KEY'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:'
-    }
-}
+DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}}
 
 PROJECT_APPS = [
-    'cached_modelforms',
+    "cached_modelforms",
 ]
 
 INSTALLED_APPS = [
-    'django.contrib.contenttypes',
+    "django.contrib.contenttypes",
 ] + PROJECT_APPS

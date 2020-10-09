@@ -13,7 +13,8 @@ from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
-NO_SETTING = ('!', None)
+NO_SETTING = ("!", None)
+
 
 class TestSettingsManager(object):
     """
@@ -24,28 +25,28 @@ class TestSettingsManager(object):
     modified.
 
     """
+
     def __init__(self):
         self._original_settings = {}
 
     def set(self, **kwargs):
-        for k,v in list(kwargs.items()):
-            self._original_settings.setdefault(k, getattr(settings, k,
-                                                          NO_SETTING))
+        for k, v in list(kwargs.items()):
+            self._original_settings.setdefault(k, getattr(settings, k, NO_SETTING))
             setattr(settings, k, v)
-        if 'INSTALLED_APPS' in kwargs:
+        if "INSTALLED_APPS" in kwargs:
             self.syncdb()
 
     def syncdb(self):
         apps.loaded = False
-        call_command('migrate', verbosity=0)
+        call_command("migrate", verbosity=0)
 
     def revert(self):
-        for k,v in list(self._original_settings.items()):
+        for k, v in list(self._original_settings.items()):
             if v == NO_SETTING:
                 delattr(settings, k)
             else:
                 setattr(settings, k, v)
-        if 'INSTALLED_APPS' in self._original_settings:
+        if "INSTALLED_APPS" in self._original_settings:
             self.syncdb()
         self._original_settings = {}
 
@@ -59,6 +60,7 @@ class SettingsTestCase(TestCase):
     self.settings_manager.revert().
 
     """
+
     def __init__(self, *args, **kwargs):
         super(SettingsTestCase, self).__init__(*args, **kwargs)
         self.settings_manager = TestSettingsManager()

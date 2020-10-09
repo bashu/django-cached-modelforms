@@ -1,44 +1,47 @@
 # -*- coding:utf-8 -*-
 
-from django.forms import Textarea
 from django.db.models import CharField
+from django.forms import Textarea
+
 try:
     from django.utils.encoding import smart_unicode as smart_text
 except ImportError:
     from django.utils.encoding import smart_text
+
 from django.forms.models import ModelChoiceField, ModelMultipleChoiceField
 
-from cached_modelforms import (ModelForm, CachedModelChoiceField,
-                               CachedModelMultipleChoiceField)
+from cached_modelforms import (CachedModelChoiceField,
+                               CachedModelMultipleChoiceField, ModelForm)
+from cached_modelforms.tests.models import (ModelWithForeignKey, ModelWithM2m,
+                                            SimpleModel)
 from cached_modelforms.tests.utils import SettingsTestCase
-from cached_modelforms.tests.models import (SimpleModel, ModelWithForeignKey,
-                                            ModelWithM2m)
 
 
 def formfield_callback(f, **kwargs):
-    '''
+    """
     Sample ``formfield_callback`` function that changes the widget for any
     ``CharField`` in model.
-    '''
+    """
     result = f.formfield(**kwargs)
     if isinstance(f, CharField):
-        result.widget = Textarea(attrs={'cols': '999', 'rows': '888'})
+        result.widget = Textarea(attrs={"cols": "999", "rows": "888"})
     return result
+
 
 class TestForms(SettingsTestCase):
     def setUp(self):
-        self.settings_manager.set(INSTALLED_APPS=('cached_modelforms.tests',))
+        self.settings_manager.set(INSTALLED_APPS=("cached_modelforms.tests",))
 
-        self.obj1 = SimpleModel.objects.create(name='name1')
-        self.obj2 = SimpleModel.objects.create(name='name2')
-        self.obj3 = SimpleModel.objects.create(name='name3')
+        self.obj1 = SimpleModel.objects.create(name="name1")
+        self.obj2 = SimpleModel.objects.create(name="name2")
+        self.obj3 = SimpleModel.objects.create(name="name3")
 
         self.get_objects = lambda: [self.obj1, self.obj2, self.obj3]
 
         class ModelFormSingle(ModelForm):
             class Meta:
                 model = ModelWithForeignKey
-                objects = {'fk_field': self.get_objects}
+                objects = {"fk_field": self.get_objects}
 
         class ModelFormSingleWithoutObjects(ModelForm):
             class Meta:
@@ -49,12 +52,12 @@ class TestForms(SettingsTestCase):
 
             class Meta:
                 model = ModelWithForeignKey
-                objects = {'fk_field': self.get_objects}
+                objects = {"fk_field": self.get_objects}
 
         class ModelFormMultiple(ModelForm):
             class Meta:
                 model = ModelWithM2m
-                objects = {'m2m_field': self.get_objects}
+                objects = {"m2m_field": self.get_objects}
 
         class ModelFormMultipleWithoutObjects(ModelForm):
             class Meta:
@@ -65,15 +68,13 @@ class TestForms(SettingsTestCase):
 
             class Meta:
                 model = ModelWithM2m
-                objects = {'m2m_field': self.get_objects}
+                objects = {"m2m_field": self.get_objects}
 
         class ModelFormMultipleWithInitials(ModelForm):
             class Meta:
                 model = ModelWithM2m
-                objects = {'m2m_field': self.get_objects}
-                m2m_initials = {'m2m_field': (
-                    lambda instance: [self.obj1.pk, self.obj2.pk]
-                )}
+                objects = {"m2m_field": self.get_objects}
+                m2m_initials = {"m2m_field": (lambda instance: [self.obj1.pk, self.obj2.pk])}
 
         self.ModelFormSingle = ModelFormSingle
         self.ModelFormSingleWithoutObjects = ModelFormSingleWithoutObjects
@@ -84,15 +85,12 @@ class TestForms(SettingsTestCase):
         self.ModelFormMultipleWithInitials = ModelFormMultipleWithInitials
 
     def test_modelform_single(self):
-        '''
+        """
         Test, that ``Meta.objects`` transforms to
         ``CachedModelChoiceField.objects``.
-        '''
-        form = self.ModelFormSingle({'fk_field': smart_text(self.obj1.pk),
-                                     'name': 'Name1'})
-        self.assertTrue(
-            isinstance(form.fields['fk_field'], CachedModelChoiceField)
-        )
+        """
+        form = self.ModelFormSingle({"fk_field": smart_text(self.obj1.pk), "name": "Name1"})
+        self.assertTrue(isinstance(form.fields["fk_field"], CachedModelChoiceField))
 
         # saving
         new_obj = form.save()
@@ -100,101 +98,68 @@ class TestForms(SettingsTestCase):
 
         # loading back
         form = self.ModelFormSingle(instance=new_obj)
-        self.assertEqual(form.initial['fk_field'], self.obj1.pk)
+        self.assertEqual(form.initial["fk_field"], self.obj1.pk)
 
     def test_modelform_single_without_objects(self):
-        '''
+        """
         If there is no ``objects`` for field, nothing happens, usual
         ``ModelChoiceField`` is used.
-        '''
-        form = self.ModelFormSingleWithoutObjects({
-            'fk_field': smart_text(self.obj1.pk),
-            'name': 'Name1'
-        })
-        self.assertTrue(isinstance(form.fields['fk_field'], ModelChoiceField))
+        """
+        form = self.ModelFormSingleWithoutObjects({"fk_field": smart_text(self.obj1.pk), "name": "Name1"})
+        self.assertTrue(isinstance(form.fields["fk_field"], ModelChoiceField))
 
     def test_modelform_single_with_formfield_callback(self):
-        '''
+        """
         ``formfield_callback`` function will be decorated, not overwritten
-        '''
-        form = self.ModelFormSingleWithFormfieldCallback({
-            'fk_field': smart_text(self.obj1.pk),
-            'name': 'Name1'
-        })
-        self.assertTrue(
-            isinstance(form.fields['fk_field'], CachedModelChoiceField)
-        )
-        self.assertEqual(form.fields['name'].widget.attrs['cols'], '999')
+        """
+        form = self.ModelFormSingleWithFormfieldCallback({"fk_field": smart_text(self.obj1.pk), "name": "Name1"})
+        self.assertTrue(isinstance(form.fields["fk_field"], CachedModelChoiceField))
+        self.assertEqual(form.fields["name"].widget.attrs["cols"], "999")
 
     def test_modelform_multiple(self):
-        '''
+        """
         Test, that ``Meta.objects`` transforms to
         ``CachedModelMultipleChoiceField.objects``.
-        '''
-        form = self.ModelFormMultiple({
-            'm2m_field': [smart_text(self.obj1.pk), smart_text(self.obj2.pk)],
-            'name': 'Name1'
-        })
-        self.assertTrue(
-            isinstance(
-                form.fields['m2m_field'],
-                CachedModelMultipleChoiceField
-            )
+        """
+        form = self.ModelFormMultiple(
+            {"m2m_field": [smart_text(self.obj1.pk), smart_text(self.obj2.pk)], "name": "Name1"}
         )
+        self.assertTrue(isinstance(form.fields["m2m_field"], CachedModelMultipleChoiceField))
 
         # saving
         new_obj = form.save()
-        self.assertEqual(
-            set(new_obj.m2m_field.all()),
-            set([self.obj1, self.obj2])
-        )
+        self.assertEqual(set(new_obj.m2m_field.all()), set([self.obj1, self.obj2]))
 
         # loading back
         form = self.ModelFormSingle(instance=new_obj)
-        self.assertEqual(
-            set(form.initial['m2m_field']),
-            set([self.obj1.pk, self.obj2.pk])
-        )
+        self.assertEqual(set(form.initial["m2m_field"]), set([self.obj1.pk, self.obj2.pk]))
 
     def test_modelform_multiple_without_objects(self):
-        '''
+        """
         If there is no ``objects`` for field, nothing happens, usual
         ``ModelMultipleChoiceField`` is used.
-        '''
-        form = self.ModelFormMultipleWithoutObjects({
-            'm2m_field': [smart_text(self.obj1.pk), smart_text(self.obj2.pk)],
-            'name': 'Name1'
-        })
-        self.assertTrue(
-            isinstance(form.fields['m2m_field'], ModelMultipleChoiceField)
+        """
+        form = self.ModelFormMultipleWithoutObjects(
+            {"m2m_field": [smart_text(self.obj1.pk), smart_text(self.obj2.pk)], "name": "Name1"}
         )
+        self.assertTrue(isinstance(form.fields["m2m_field"], ModelMultipleChoiceField))
 
     def test_modelform_multiple_with_formfield_callback(self):
-        '''
+        """
         ``formfield_callback`` function will be decorated, not overwritten
-        '''
-        form = self.ModelFormMultipleWithFormfieldCallback({
-            'm2m_field': [smart_text(self.obj1.pk), smart_text(self.obj2.pk)],
-            'name': 'Name1'})
-        self.assertTrue(
-            isinstance(
-                form.fields['m2m_field'],
-                CachedModelMultipleChoiceField
-            )
+        """
+        form = self.ModelFormMultipleWithFormfieldCallback(
+            {"m2m_field": [smart_text(self.obj1.pk), smart_text(self.obj2.pk)], "name": "Name1"}
         )
-        self.assertEqual(form.fields['name'].widget.attrs['cols'], '999')
+        self.assertTrue(isinstance(form.fields["m2m_field"], CachedModelMultipleChoiceField))
+        self.assertEqual(form.fields["name"].widget.attrs["cols"], "999")
 
     def test_modelform_multiple_with_initials(self):
-        '''
+        """
         You can set initial for ``CachedModelMultipleChoiceField`` in
         ``Meta.m2m_initials``. There will be no DB request.
-        '''
-        form = self.ModelFormMultipleWithInitials({
-            'm2m_field': [smart_text(self.obj3.pk)],
-            'name': 'Name1'})
+        """
+        form = self.ModelFormMultipleWithInitials({"m2m_field": [smart_text(self.obj3.pk)], "name": "Name1"})
         new_obj = form.save()
         form = self.ModelFormMultipleWithInitials(instance=new_obj)
-        self.assertEqual(
-            set(form.initial['m2m_field']),
-            set([self.obj1.pk, self.obj2.pk])
-        )
+        self.assertEqual(set(form.initial["m2m_field"]), set([self.obj1.pk, self.obj2.pk]))

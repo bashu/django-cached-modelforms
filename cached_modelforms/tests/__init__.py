@@ -1,4 +1,2 @@
-# -*- coding:utf-8 -*-
-
-from .test_fields import TestFields
-from .test_forms import TestForms
+from .test_fields import *  # noqa
+from .test_forms import *  # noqa
